@@ -5,38 +5,41 @@
 
 #include <cmath>
 
+namespace Math
+{
+
 template<>
-constexpr float Math::Dot(const sf::Vector2f& v1, const sf::Vector2f& v2)
+constexpr float Dot(const sf::Vector2f& v1, const sf::Vector2f& v2)
 {
 	return v1.x * v2.x + v1.y * v2.y;
 }
 template<>
-constexpr float Math::Dot(const sf::Vector3f& v1, const sf::Vector3f& v2)
+constexpr float Dot(const sf::Vector3f& v1, const sf::Vector3f& v2)
 {
 	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 template<>
-constexpr float Math::LengthSquared(const sf::Vector2f& v)
+constexpr float LengthSquared(const sf::Vector2f& v)
 {
 	return v.x * v.x + v.y * v.y;
 }
 template<>
-constexpr float Math::LengthSquared(const sf::Vector3f& v)
+constexpr float LengthSquared(const sf::Vector3f& v)
 {
 	return v.x * v.x + v.y * v.y + v.z * v.z;
 }
 template<>
-inline float Math::Length(const sf::Vector2f& v)
+inline float Length(const sf::Vector2f& v)
 {
 	return std::sqrt(v.x * v.x + v.y * v.y);
 }
 template<>
-inline float Math::Length(const sf::Vector3f& v)
+inline float Length(const sf::Vector3f& v)
 {
 	return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 template<>
-inline void Math::SetLength(sf::Vector2f& v, float len)
+inline void SetLength(sf::Vector2f& v, float len)
 {
 	float oldLen = Length(v);
 	if (oldLen == 0)
@@ -47,7 +50,7 @@ inline void Math::SetLength(sf::Vector2f& v, float len)
 	v.y *= newLen;
 }
 template<>
-inline void Math::SetLength(sf::Vector3f& v, float len)
+inline void SetLength(sf::Vector3f& v, float len)
 {
 	float oldLen = Length(v);
 	if (oldLen == 0)
@@ -59,15 +62,17 @@ inline void Math::SetLength(sf::Vector3f& v, float len)
 	v.z *= newLen;
 }
 template<typename T>
-constexpr float Math::PolarAngle(const T& v)
+constexpr float PolarAngle(const T& v)
 {
 	return std::atan2(v.y, v.x);
 }
 template<typename T>
-inline void Math::SetPolarAngle(T& v, float ang)
+inline void SetPolarAngle(T& v, float ang)
 {
 	float len = Length(v);
 
 	v.x = len * std::cos(ang);
 	v.y = len * std::sin(ang);
+}
+
 }

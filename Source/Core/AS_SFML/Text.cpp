@@ -9,9 +9,10 @@ namespace
 		new (mem) sf::Text();
 	}
 	template<typename... Args>
-	void createTextData(void* mem, Args... args)
+	void createTextData(sf::Text* mem, Args... args)
 	{
-		new (mem) sf::Text(args...);
+		new (mem) sf::Text();
+		mem->setString(args...);
 	}
 	void destroyText(sf::Text* mem)
 	{

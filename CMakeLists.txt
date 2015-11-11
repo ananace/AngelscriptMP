@@ -25,7 +25,7 @@ ELSE () # Linux / Cygwin
 			MESSAGE(FATAL_ERROR "This project uses C++11, so you need at least Clang 3.3 to compile this project.")
 		ENDIF ()
 
-		ADD_DEFINITIONS(-DAS_CAN_USE_CPP11 -D__GNUC_MINOR__=8) # Clang hack, makes asGetTypeTraits work
+		ADD_DEFINITIONS(-DAS_CAN_USE_CPP11) # Clang hack, makes asGetTypeTraits work
 	ENDIF ()
 
 	SET(CMAKE_CXX_FLAGS                "-Wall -Wextra -std=c++11 -pedantic -Wno-macro-redefined")
