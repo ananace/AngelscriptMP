@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <list>
 #elif __linux__
+#include <dirent.h>
 #include <unistd.h>
 #include <sys/select.h>
 #include <sys/inotify.h>
@@ -16,6 +17,29 @@
 namespace
 {
 #ifdef _WIN32
+	void recurseDirectories(const std::string& folder, std::list<std::string>& subdirs)
+	{
+		WIN32_FIND_DATAA find = { };
+		HANDLE findHandle = FindFirstFileExA((folder + "\\*").c_str(), FindExInfoStandard, &find, FindExSearchNameMatch, NULL, 0);
+		if (findHandle == INVALID_HANDLE_VALUE)
+			return;
+
+		do
+		{
+			std::string name = find.cFileName;
+
+			if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+				(name != "." && name != ".."))
+			{
+				subdirs.push_back(folder + "\\" + name);
+				recurseDirectories(subdirs.back(), subdirs);
+			}
+
+			if (!FindFileNextA(findHandle, &find))
+				break;
+		} while (findHandle != INVALID_HANDLE_VALUE);
+	}
+
 	struct ChangeSourceImpl : public FileWatcher::ChangeSource
 	{
 		ChangeSourceImpl(const std::string& path, bool recurse):
@@ -34,7 +58,28 @@ namespace
 
 			mWatches.push_back(mainDir);
 
-			// TODO: Recurse
+			if (recurse)
+			{
+				std::list<std::string> subdirs;
+				recurseDirectories(path, subdirs);
+
+				for (auto& dir : subdirs)
+				{
+					// Only need to add additional watches for links
+					if (!(GetFileAttributes(dir.c_str()) & FILE_ATTRIBUTE_REPARSE_POINT))
+						continue;
+
+					Data subdir = {
+						dir,
+						CreateFileA(dir.c_str(), FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL),
+						{ },
+						{ }
+					};
+					subdir.Overlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+
+					mWatches.push_back(subdir);
+				}
+			}
 
 			for (auto& watch : mWatches)
 				ReadDirectoryChangesW(watch.Handle,
@@ -112,6 +157,26 @@ namespace
 		std::list<Data> mWatches;
 	};
 #else
+	void recurseDirectories(const std::string& folder, std::list<std::string>& subdirs)
+	{
+		DIR* dp;
+		if ((dp = opendir(folder.c_str())) == nullptr)
+			return;
+
+		dirent* ent;
+		while ((ent = readdir(dp)))
+		{
+			if (!(ent->d_type & (DT_DIR | DT_LNK)))
+				continue;
+
+			std::string path = folder + '/' + ent->d_name;
+			subdirs.push_back(path);
+			recurseDirectories(path, subdirs);
+		}
+
+		closedir(dp);
+	}
+
 	struct ChangeSourceImpl : public FileWatcher::ChangeSource
 	{
 		ChangeSourceImpl(const std::string& path, bool recurse) :
@@ -125,6 +190,8 @@ namespace
 			if (!recurse)
 				return;
 
+			std::list<std::string> subdirs;
+			recurseDirectories(path, subdirs);
 		}
 
 		~ChangeSourceImpl()
