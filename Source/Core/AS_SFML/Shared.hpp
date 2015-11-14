@@ -13,7 +13,7 @@ namespace priv
 {
 
 // Registering functions
-//=======================
+//========================
 extern bool RegVec2(asIScriptEngine*);
 extern bool RegVec3(asIScriptEngine*);
 extern bool RegRect(asIScriptEngine*);
@@ -28,7 +28,7 @@ extern bool RegSound(asIScriptEngine*);
 extern bool RegListener(asIScriptEngine*);
 
 // Wrapper struct
-//================
+//==================
 struct SFMLType
 {
 	const char* Name;
@@ -53,7 +53,7 @@ template<typename T>
 bool RegisterSoundSource(asIScriptEngine* eng, const char* name);
 
 // Helper classes
-//================
+//==================
 template<typename T>
 struct CSFMLType : public CUserType
 {
