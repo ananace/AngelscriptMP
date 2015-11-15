@@ -20,11 +20,11 @@ namespace
 	}
 }
 
-bool as::priv::RegText(asIScriptEngine* eng)
+void as::priv::RegText(asIScriptEngine* eng)
 {
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
-	AS_ASSERT(eng->RegisterObjectType("Text", sizeof(sf::Text), asGetTypeTraits<sf::Text>()));
+	AS_ASSERT(eng->RegisterObjectType("Text", sizeof(sf::Text), asOBJ_VALUE | asGetTypeTraits<sf::Text>()));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createText), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_CONSTRUCT, "void f(const ::string&in)", asFunctionPtr(createTextData<const std::string&>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyText), asCALL_CDECL_OBJFIRST));
@@ -38,8 +38,8 @@ bool as::priv::RegText(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterEnumValue("Style", "StrikeThrough", sf::Text::StrikeThrough));
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
-	if (!RegisterDrawable<sf::Text>(eng, "Text")) return false;
-	if (!RegisterTransformable<sf::Text>(eng, "Text")) return false;
+	RegisterDrawable<sf::Text>(eng, "Text");
+	RegisterTransformable<sf::Text>(eng, "Text");
 
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "uint get_CharacterSize() const", asMETHOD(sf::Text, getCharacterSize), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_CharacterSize(uint)", asMETHOD(sf::Text, setCharacterSize), asCALL_THISCALL));
@@ -51,6 +51,4 @@ bool as::priv::RegText(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_Style(uint)", asMETHOD(sf::Text, setStyle), asCALL_THISCALL));
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
-
-	return true;
 }

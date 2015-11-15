@@ -2,6 +2,7 @@ SET(HEADERS
 	Engine.hpp
 	FileWatcher.hpp
 	Math.hpp
+	ScriptManager.hpp
 
 	AS_Addons/scriptarray/scriptarray.h
 	AS_Addons/scriptbuilder/scriptbuilder.h
@@ -18,14 +19,17 @@ SET(SOURCES
 	Engine.cpp
 	FileWatcher.cpp
 	Math.cpp
+	ScriptManager.cpp
 
 	AS_Addons/scriptarray/scriptarray.cpp
 	AS_Addons/scriptbuilder/scriptbuilder.cpp
 	AS_Addons/scriptmath/scriptmath.cpp
 	AS_Addons/scriptstdstring/scriptstdstring.cpp
+	AS_Addons/scriptstdstring/scriptstdstring_utils.cpp
 	AS_Addons/serializer/serializer.cpp
 
 	AS_SFML/AS_SFML.cpp
+	AS_SFML/Color.cpp
 	AS_SFML/Listener.cpp
 	AS_SFML/Music.cpp
 	AS_SFML/Rect.cpp

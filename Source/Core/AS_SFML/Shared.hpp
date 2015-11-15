@@ -5,7 +5,9 @@
 
 #include <functional>
 
-#define AS_ASSERT(f) if ((f) < 0) return false
+#include <stdexcept>
+
+#define AS_ASSERT(f) if ((f) < 0) throw std::runtime_error(__FILE__ " - " #f);
 
 namespace as
 {
@@ -14,43 +16,44 @@ namespace priv
 
 // Registering functions
 //========================
-extern bool RegVec2(asIScriptEngine*);
-extern bool RegVec3(asIScriptEngine*);
-extern bool RegRect(asIScriptEngine*);
-extern bool RegTexture(asIScriptEngine*);
-extern bool RegCircleShape(asIScriptEngine*);
-extern bool RegRectangleShape(asIScriptEngine*);
-extern bool RegConvexShape(asIScriptEngine*);
-extern bool RegSprite(asIScriptEngine*);
-extern bool RegText(asIScriptEngine*);
-extern bool RegMusic(asIScriptEngine*);
-extern bool RegSound(asIScriptEngine*);
-extern bool RegListener(asIScriptEngine*);
+extern void RegVec2(asIScriptEngine*);
+extern void RegVec3(asIScriptEngine*);
+extern void RegRect(asIScriptEngine*);
+extern void RegColor(asIScriptEngine*);
+extern void RegTexture(asIScriptEngine*);
+extern void RegCircleShape(asIScriptEngine*);
+extern void RegRectangleShape(asIScriptEngine*);
+extern void RegConvexShape(asIScriptEngine*);
+extern void RegSprite(asIScriptEngine*);
+extern void RegText(asIScriptEngine*);
+extern void RegMusic(asIScriptEngine*);
+extern void RegSound(asIScriptEngine*);
+extern void RegListener(asIScriptEngine*);
 
 // Wrapper struct
 //==================
 struct SFMLType
 {
 	const char* Name;
-	std::function<bool(asIScriptEngine*)> Reg;
+	std::function<void(asIScriptEngine*)> Reg;
 	std::function<CUserType*()> Ser;
 };
 
 // Type store
 //============
-static const size_t TypeCount = 12;
+static const size_t TypeCount = 13;
 extern const SFMLType Types[TypeCount];
 
 // Helper functions
 //==================
 template<typename T>
-bool RegisterDrawable(asIScriptEngine* eng, const char* name);
+void RegisterDrawable(asIScriptEngine* eng, const char* name);
 template<typename T>
-bool RegisterTransformable(asIScriptEngine* eng, const char* name);
+void RegisterTransformable(asIScriptEngine* eng, const char* name);
 template<typename T>
-bool RegisterShape(asIScriptEngine* eng, const char* name);
+void RegisterShape(asIScriptEngine* eng, const char* name);
 template<typename T>
-bool RegisterSoundSource(asIScriptEngine* eng, const char* name);
+void RegisterSoundSource(asIScriptEngine* eng, const char* name);
 
 // Helper classes
 //==================

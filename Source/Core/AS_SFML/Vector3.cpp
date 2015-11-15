@@ -23,11 +23,11 @@ namespace
 	}
 }
 
-bool as::priv::RegVec3(asIScriptEngine* eng)
+void as::priv::RegVec3(asIScriptEngine* eng)
 {
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
-	AS_ASSERT(eng->RegisterObjectType("Vec3", sizeof(sf::Vector3f), asGetTypeTraits<sf::Vector3f>()));
+	AS_ASSERT(eng->RegisterObjectType("Vec3", sizeof(sf::Vector3f), asOBJ_VALUE | asGetTypeTraits<sf::Vector3f>()));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Vec3", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(createVec, (void*), void), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Vec3", asBEHAVE_CONSTRUCT, "void f(float x, float y, float z)", asFUNCTIONPR(createVec, (void*, float, float, float), void), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Vec3", asBEHAVE_CONSTRUCT, "void f(const Vec3&in)", asFUNCTIONPR(createVec, (void*, const sf::Vector3f&), void), asCALL_CDECL_OBJFIRST));
@@ -45,6 +45,4 @@ bool as::priv::RegVec3(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "float Dot(const Vec3&in) const", asFUNCTIONPR(Math::Dot, (const sf::Vector3f&, const sf::Vector3f&), float), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
-
-	return true;
 }

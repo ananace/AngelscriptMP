@@ -23,11 +23,11 @@ namespace
 	}
 }
 
-bool as::priv::RegVec2(asIScriptEngine* eng)
+void as::priv::RegVec2(asIScriptEngine* eng)
 {
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
-	AS_ASSERT(eng->RegisterObjectType("Vec2", sizeof(sf::Vector2f), asGetTypeTraits<sf::Vector2f>()));
+	AS_ASSERT(eng->RegisterObjectType("Vec2", sizeof(sf::Vector2f), asOBJ_VALUE | asGetTypeTraits<sf::Vector2f>()));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Vec2", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(createVec, (void*), void), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Vec2", asBEHAVE_CONSTRUCT, "void f(float x, float y)", asFUNCTIONPR(createVec, (void*, float, float), void), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Vec2", asBEHAVE_CONSTRUCT, "void f(const Vec2&in)", asFUNCTIONPR(createVec, (void*, const sf::Vector2f&), void), asCALL_CDECL_OBJFIRST));
@@ -44,6 +44,4 @@ bool as::priv::RegVec2(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "float Dot(const Vec2&in) const", asFUNCTIONPR(Math::Dot, (const sf::Vector2f&, const sf::Vector2f&), float), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
-
-	return true;
 }

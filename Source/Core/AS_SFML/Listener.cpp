@@ -7,7 +7,7 @@ namespace
 
 }
 
-bool as::priv::RegListener(asIScriptEngine* eng)
+void as::priv::RegListener(asIScriptEngine* eng)
 {
 	AS_ASSERT(eng->SetDefaultNamespace("sf::Listener"));
 
@@ -21,6 +21,4 @@ bool as::priv::RegListener(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterGlobalFunction("void set_UpVector(const sf::Vec3&in)", asFUNCTIONPR(sf::Listener::setUpVector, (const sf::Vector3f&), void), asCALL_CDECL));
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
-
-	return true;
 }

@@ -10,7 +10,7 @@ namespace
 	}
 }
 
-bool as::priv::RegTexture(asIScriptEngine* eng)
+void as::priv::RegTexture(asIScriptEngine* eng)
 {
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
@@ -24,6 +24,4 @@ bool as::priv::RegTexture(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Texture", "Vec2 get_Size() const", asFUNCTION(getTextureSize), asCALL_GENERIC));
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
-
-	return true;
 }

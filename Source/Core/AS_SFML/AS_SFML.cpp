@@ -1,32 +1,11 @@
 #include "AS_SFML.hpp"
 #include "Shared.hpp"
 
+#include "../ScriptManager.hpp"
+
 using namespace as;
 
-SFML::SFML(asIScriptEngine* engine) :
-	mFailures(0), mEngine(engine)
-{
-	registerScript();
-}
-SFML::SFML(SFML&& rhs) :
-	mFailures(std::move(rhs.mFailures)), mEngine(std::move(rhs.mEngine))
-{
-	rhs.mEngine = nullptr;
-}
-SFML::~SFML()
-{
-	if (!mEngine)
-		return;
-
-	// TODO: Anything to do here?
-}
-
-bool SFML::isValid() const
-{
-	return mFailures == 0;
-}
-
-void SFML::registerTypes(CSerializer& ser) const
+void SFML::registerTypes(CSerializer& ser)
 {
 	for (auto& i : as::priv::Types)
 	{
@@ -37,16 +16,13 @@ void SFML::registerTypes(CSerializer& ser) const
 	}
 }
 
-void SFML::registerScript()
+void SFML::registerTypes(ScriptManager& man)
 {
 	for (auto& i : as::priv::Types)
 	{
 		if (!i.Reg)
 			continue;
 
-		if (!i.Reg(mEngine))
-			++mFailures;
+		man.addExtension(i.Name, i.Reg);
 	}
-
-	mEngine->SetDefaultNamespace("");
 }
