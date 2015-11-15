@@ -9,28 +9,6 @@ namespace priv
 {
 
 template<typename T>
-void CSFMLType<T>::Store(CSerializedValue *val, void *ptr)
-{
-    val->SetUserData(new T(*reinterpret_cast<T*>(ptr)));
-}
-template<typename T>
-void CSFMLType<T>::Restore(CSerializedValue *val, void *ptr)
-{
-    auto buffer = reinterpret_cast<T*>(val->GetUserData());
-    *reinterpret_cast<T*>(ptr) = *buffer;
-}
-template<typename T>
-void CSFMLType<T>::CleanupUserData(CSerializedValue *val)
-{
-    auto buffer = reinterpret_cast<T*>(val->GetUserData());
-
-    if (buffer)
-    	delete buffer;
-
-    val->SetUserData(nullptr);
-}
-
-template<typename T>
 void RegisterDrawable(asIScriptEngine* eng, const char* name)
 {
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_LocalBounds() const", asMETHOD(T, getLocalBounds), asCALL_THISCALL));

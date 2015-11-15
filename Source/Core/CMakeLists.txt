@@ -3,6 +3,7 @@ SET(HEADERS
 	FileWatcher.hpp
 	Math.hpp
 	ScriptManager.hpp
+	ScriptManager.inl
 
 	AS_Addons/scriptarray/scriptarray.h
 	AS_Addons/scriptbuilder/scriptbuilder.h

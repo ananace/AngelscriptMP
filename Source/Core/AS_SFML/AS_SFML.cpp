@@ -20,9 +20,9 @@ void SFML::registerTypes(ScriptManager& man)
 {
 	for (auto& i : as::priv::Types)
 	{
-		if (!i.Reg)
-			continue;
-
-		man.addExtension(i.Name, i.Reg);
+		if (i.Reg)
+			man.addExtension(i.Name, i.Reg);
+		if (i.Ser)
+			man.registerSerializedType(i.Name, i.Ser);
 	}
 }

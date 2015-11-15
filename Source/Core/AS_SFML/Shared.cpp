@@ -1,4 +1,5 @@
 #include "Shared.hpp"
+#include "../ScriptManager.hpp"
 
 #include <SFML/Audio/Music.hpp>
 #include <SFML/Graphics.hpp>
@@ -7,16 +8,16 @@
 using namespace as::priv;
 
 const SFMLType as::priv::Types[TypeCount] = {
-	{ "Vec2", RegVec2, []() { return new CSFMLType<sf::Vector2f>(); } },
-	{ "Vec3", RegVec3, []() { return new CSFMLType<sf::Vector3f>(); } },
-	{ "Rect", RegRect, []() { return new CSFMLType<sf::FloatRect>(); } },
-	{ "Color", RegColor, []() { return new CSFMLType<sf::Color>(); } },
+	{ "Vec2", RegVec2, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Vector2f>(); } },
+	{ "Vec3", RegVec3, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Vector3f>(); } },
+	{ "Rect", RegRect, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::FloatRect>(); } },
+	{ "Color", RegColor, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Color>(); } },
 	{ "Texture", RegTexture, nullptr },
-	{ "Shapes::Circle", RegCircleShape, []() { return new CSFMLType<sf::CircleShape>(); } },
-	{ "Shapes::Rectangle", RegRectangleShape, []() { return new CSFMLType<sf::RectangleShape>(); } },
-	{ "Shapes::Convex", RegConvexShape, []() { return new CSFMLType<sf::ConvexShape>(); } },
-	{ "Sprite", RegSprite, []() { return new CSFMLType<sf::Sprite>(); } },
-	{ "Text", RegText, []() { return new CSFMLType<sf::Text>(); } },
+	{ "Shapes::Circle", RegCircleShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::CircleShape>(); } },
+	{ "Shapes::Rectangle", RegRectangleShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::RectangleShape>(); } },
+	{ "Shapes::Convex", RegConvexShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::ConvexShape>(); } },
+	{ "Sprite", RegSprite, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Sprite>(); } },
+	{ "Text", RegText, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Text>(); } },
 	{ "Music", RegMusic, nullptr },
 	{ "Sound", RegSound, nullptr },
 	{ "Listener", RegListener, nullptr }

@@ -13,10 +13,12 @@
 
 Application::Application()
 {
+	asPrepareMultithread();
 }
 
 Application::~Application()
 {
+	asUnprepareMultithread();
 }
 
 void Application::init()

@@ -13,6 +13,8 @@ void error(const asSMessageInfo* msg)
 		case asMSGTYPE_WARNING: std::cerr << "warning"; break;
 		case asMSGTYPE_INFORMATION: std::cerr << "info"; break;
 	}
+	if (msg->section)
+		std::cerr << " (" << msg->section << ":" << msg->row << ":" << msg->col << ")";
 	std::cerr << ";" << std::endl
 		<< msg->message << std::endl;
 }
@@ -20,6 +22,10 @@ void error(const asSMessageInfo* msg)
 void ScriptManager::addExtension(const std::string& name, const ScriptExtensionFun& function)
 {
 	mExtensions.emplace_back(name, function);
+}
+void ScriptManager::registerSerializedType(const std::string& name, const std::function<CUserType*()>& ser)
+{
+	mSerializers[name] = ser;
 }
 
 void ScriptManager::init()

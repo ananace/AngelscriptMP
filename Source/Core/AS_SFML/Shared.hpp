@@ -55,17 +55,6 @@ void RegisterShape(asIScriptEngine* eng, const char* name);
 template<typename T>
 void RegisterSoundSource(asIScriptEngine* eng, const char* name);
 
-// Helper classes
-//==================
-template<typename T>
-struct CSFMLType : public CUserType
-{
-public:
-	void Store(CSerializedValue *val, void *ptr);
-	void Restore(CSerializedValue *val, void *ptr);
-	void CleanupUserData(CSerializedValue *val);
-};
-
 }
 }
 
