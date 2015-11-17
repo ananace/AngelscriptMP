@@ -3,6 +3,8 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 
+#include <SFML/System/String.hpp>
+
 #include <windows.h>
 #include <list>
 #elif __linux__
@@ -28,14 +30,14 @@ namespace
 		{
 			std::string name = find.cFileName;
 
-			if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+			if ((find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
 				(name != "." && name != ".."))
 			{
 				subdirs.push_back(folder + "\\" + name);
 				recurseDirectories(subdirs.back(), subdirs);
 			}
 
-			if (!FindFileNextA(findHandle, &find))
+			if (!FindNextFileA(findHandle, &find))
 				break;
 		} while (findHandle != INVALID_HANDLE_VALUE);
 	}
@@ -112,18 +114,18 @@ namespace
 				int i = 0;
 				do
 				{
-					auto* pEntry = (FILE_NOTIFY_INFORMATION*)&watch->Buffer[i];
+					FILE_NOTIFY_INFORMATION* pEntry = (FILE_NOTIFY_INFORMATION*)&watch.Buffer[i];
 					i += pEntry->NextEntryOffset;
 
 					if (pEntry->FileNameLength > 0)
 					{
 						std::string path;
-						if (watch.Path == Path)
+						if (watch.Directory == Path)
 							path = "";
 						else
-							path = watch.Path.substr(Path.size() + 1) + '\\';
+							path = watch.Directory.substr(Path.size() + 1) + '\\';
 
-						path += std::wstring(pEntry->FileName, pEntry->FileNameLength / sizeof(wchar_t)); // FIXME: Dewide
+						path += sf::String(std::wstring(pEntry->FileName, pEntry->FileNameLength / sizeof(wchar_t))); // FIXME: Dewide
 
 						list.push_back(path);
 					}
@@ -132,7 +134,7 @@ namespace
 				} while (true);
 
 				CancelIo(watch.Handle);
-				watch.Buffer = {};
+				std::fill_n(watch.Buffer, sizeof(watch.Buffer), 0);
 				ReadDirectoryChangesW(watch.Handle,
 					&watch.Buffer,
 					sizeof(watch.Buffer),

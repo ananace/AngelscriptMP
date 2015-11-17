@@ -18,21 +18,21 @@
 class ASException : public std::runtime_error
 {
 public:
-	ASException(const std::string& message, int errcode, const std::string& file = "", int line = -1) : std::runtime_error(message),
-		mMessage(message), mFile(file), mErr(errcode), mLine(line)
+	ASException(const std::string& message, int errcode, const std::string& file = "", int line = -1) : std::runtime_error("")
 	{
+		std::ostringstream oss;
 
+		if (file.empty())
+			oss << message << " (" << errcode << " - " << GetMessage(errcode) << ")";
+		else
+			oss << file << ":" << line << ": Call to AngelScript failed with error " << (-errcode) << " - " << GetMessage(errcode) << std::endl << ">  The call was: '" << message << "'";
+		
+		mMessage = oss.str();
 	}
 
 	const char* what() const noexcept
 	{
-		std::ostringstream oss;
-
-		if (mFile.empty())
-			oss << mMessage << " (" << mErr << " - " << GetMessage(mErr) << ")";
-		else
-			oss << mFile << ":" << mLine << ": Call to AngelScript failed with error " << (-mErr) << " - " << GetMessage(mErr) << std::endl << ">  The call was: '" << mMessage << "'";
-		return oss.str().c_str();
+		return mMessage.c_str();
 	}
 
 	static std::string GetMessage(int code)
@@ -104,8 +104,7 @@ public:
 	}
 
 private:
-	std::string mMessage, mFile;
-	int mErr, mLine;
+	std::string mMessage;
 };
 #else
 #define AS_ASSERT(f) if ((f) < 0) throw std::runtime_error("Error in Angelscript call")

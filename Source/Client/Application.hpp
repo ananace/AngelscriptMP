@@ -22,11 +22,6 @@ public:
 	sf::RenderTarget& getRT();
 
 private:
-	void eventThread();
-	void drawThread();
-	void updateThread();
-
 	ScriptManager mMan;
 	sf::RenderWindow mWindow;
-	std::atomic_bool mRunning;
 };

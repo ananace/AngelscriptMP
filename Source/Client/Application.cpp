@@ -10,15 +10,12 @@
 #include <Core/AS_SFML/AS_SFML.hpp>
 
 
-Application::Application() :
-	mRunning(false)
+Application::Application()
 {
-	asPrepareMultithread();
 }
 
 Application::~Application()
 {
-	asUnprepareMultithread();
 }
 
 void Application::init()
@@ -31,61 +28,28 @@ void Application::init()
 
 	mMan.init();
 
-	mWindow.create(sf::VideoMode(800, 600), "AngelscriptMP Client");
+	mWindow.create({ 800, 600 }, "AngelscriptMP Client");
 }
 
 void Application::run()
 {
-	sf::Thread eventT(&Application::eventThread, this);
-	sf::Thread drawT(&Application::drawThread, this);
-	sf::Thread updateT(&Application::updateThread, this);
+	sf::Event ev;
 
-	mRunning = true;
+	while (mWindow.isOpen())
+	{
+		if (mWindow.pollEvent(ev))
+		{
+			if (ev.type == sf::Event::Closed)
+				mWindow.close();
+		}
 
-	eventT.launch();
-	drawT.launch();
-	updateT.launch();
+		mWindow.clear();
 
-	updateT.wait();
-	drawT.wait();
-	eventT.wait();
+		mWindow.display();
+	}
 }
 
 sf::RenderTarget& Application::getRT()
 {
 	return mWindow;
-}
-
-void Application::eventThread()
-{
-	sf::Event ev;
-
-	while (mRunning)
-	{
-		mWindow.waitEvent(ev);
-
-		if (ev.type == sf::Event::Closed)
-		{
-			mRunning = false;
-			mWindow.close();
-		}
-	}
-}
-void Application::drawThread()
-{
-	while (mRunning)
-	{
-		mWindow.clear();
-
-		mWindow.display();
-
-		sf::sleep(sf::milliseconds(1));
-	}
-}
-void Application::updateThread()
-{
-	while (mRunning)
-	{
-		sf::sleep(sf::milliseconds(1));
-	}
 }
