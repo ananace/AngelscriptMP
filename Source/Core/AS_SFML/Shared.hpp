@@ -1,13 +1,8 @@
 #pragma once
 
-#include <angelscript.h>
-#include <Core/AS_Addons/serializer/serializer.h>
+#include "../ScriptManager.hpp"
 
 #include <functional>
-
-#include <stdexcept>
-
-#define AS_ASSERT(f) if ((f) < 0) throw std::runtime_error(__FILE__ " - " #f);
 
 namespace as
 {

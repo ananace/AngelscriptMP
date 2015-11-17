@@ -9,9 +9,9 @@
 #include <Core/AS_Addons/scriptstdstring/scriptstdstring.h>
 #include <Core/AS_SFML/AS_SFML.hpp>
 
-#include <atomic>
 
-Application::Application()
+Application::Application() :
+	mRunning(false)
 {
 	asPrepareMultithread();
 }
@@ -34,15 +34,13 @@ void Application::init()
 	mWindow.create(sf::VideoMode(800, 600), "AngelscriptMP Client");
 }
 
-std::atomic_bool runs;
-
 void Application::run()
 {
 	sf::Thread eventT(&Application::eventThread, this);
 	sf::Thread drawT(&Application::drawThread, this);
 	sf::Thread updateT(&Application::updateThread, this);
 
-	runs = true;
+	mRunning = true;
 
 	eventT.launch();
 	drawT.launch();
@@ -62,20 +60,20 @@ void Application::eventThread()
 {
 	sf::Event ev;
 
-	while (runs)
+	while (mRunning)
 	{
 		mWindow.waitEvent(ev);
 
 		if (ev.type == sf::Event::Closed)
 		{
-			runs = false;
+			mRunning = false;
 			mWindow.close();
 		}
 	}
 }
 void Application::drawThread()
 {
-	while (runs)
+	while (mRunning)
 	{
 		mWindow.clear();
 
@@ -86,7 +84,7 @@ void Application::drawThread()
 }
 void Application::updateThread()
 {
-	while (runs)
+	while (mRunning)
 	{
 		sf::sleep(sf::milliseconds(1));
 	}

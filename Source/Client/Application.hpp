@@ -4,6 +4,8 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 
+#include <atomic>
+
 class Application
 {
 public:
@@ -26,4 +28,5 @@ private:
 
 	ScriptManager mMan;
 	sf::RenderWindow mWindow;
+	std::atomic_bool mRunning;
 };

@@ -26,7 +26,7 @@ void as::priv::RegColor(asIScriptEngine* eng)
 
 	AS_ASSERT(eng->RegisterObjectBehaviour("Color", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createColor), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Color", asBEHAVE_CONSTRUCT, "void f(uint8,uint8,uint8)", asFUNCTION(createColorData), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Color", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyColor), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectBehaviour("Color", asBEHAVE_DESTRUCT, "void f(int)", asFUNCTION(destroyColor), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->RegisterObjectProperty("Color", "uint8 R", asOFFSET(sf::Color, r)));
 	AS_ASSERT(eng->RegisterObjectProperty("Color", "uint8 G", asOFFSET(sf::Color, g)));
