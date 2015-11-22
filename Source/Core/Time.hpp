@@ -5,9 +5,11 @@
 
 class asIScriptEngine;
 
-#ifndef NEEDS_HIGH_RESOLUTION_CLOCK
+#if !defined _MSC_VER || _MSC_VER >= 1900
 typedef std::chrono::high_resolution_clock Clock;
 #else
+#pragma message("Compiling this project with Visual Studio 2015+ is recommended.")
+#define NEEDS_HIGH_RESOLUTION_CLOCK
 struct Clock
 {
 	typedef long long rep;

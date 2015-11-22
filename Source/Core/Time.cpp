@@ -6,23 +6,6 @@
 
 #include <ctime>
 
-#ifdef NEEDS_HIGH_RESOLUTION_CLOCK
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-Clock::time_point Clock::now()
-{
-	static LARGE_INTEGER _Freq;
-	QueryPerformanceFrequency(&_Freq);	// doesn't change after system boot
-	LARGE_INTEGER _Ctr;
-	QueryPerformanceCounter(&_Ctr);
-	static_assert(period::num == 1, "This assumes period::num == 1.");
-	const long long _Whole = (_Ctr.QuadPart / _Freq.QuadPart) * period::den;
-	const long long _Part = (_Ctr.QuadPart % _Freq.QuadPart) * period::den / _Freq.QuadPart;
-	return (time_point(duration(_Whole + _Part)));
-}
-#endif
-
 namespace
 {
 	auto start = Clock::now();
@@ -141,3 +124,27 @@ void Time::registerTimeTypes(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(Time::getRunTime), asCALL_CDECL));
 	AS_ASSERT(eng->SetDefaultNamespace(""));
 }
+
+// Let's try to keep Windows.h as far out of the way as possible
+#ifdef NEEDS_HIGH_RESOLUTION_CLOCK
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+namespace
+{
+	static LARGE_INTEGER _Freq;
+}
+
+Clock::time_point Clock::now()
+{
+	if (_Freq.QuadPart == 0)
+		QueryPerformanceFrequency(&_Freq);
+
+	LARGE_INTEGER _Ctr;
+	QueryPerformanceCounter(&_Ctr);
+	static_assert(period::num == 1, "This assumes period::num == 1.");
+	const long long _Whole = (_Ctr.QuadPart / _Freq.QuadPart) * period::den;
+	const long long _Part = (_Ctr.QuadPart % _Freq.QuadPart) * period::den / _Freq.QuadPart;
+	return (time_point(duration(_Whole + _Part)));
+}
+#endif
