@@ -33,6 +33,8 @@ void as::priv::RegCircleShape(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectBehaviour("CircleShape", asBEHAVE_CONSTRUCT, "void f(float,uint)", asFunctionPtr(createShapeData<sf::CircleShape,float,size_t>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("CircleShape", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyShape<sf::CircleShape>), asCALL_CDECL_OBJFIRST));
 
+	AS_ASSERT(eng->RegisterObjectMethod("CircleShape", "CircleShape& opAssign(const CircleShape&in)", asMETHODPR(sf::CircleShape, operator=, (const sf::CircleShape&), sf::CircleShape&), asCALL_THISCALL));
+
 	RegisterDrawable<sf::CircleShape>(eng, "CircleShape");
 	RegisterShape<sf::CircleShape>(eng, "CircleShape");
 	RegisterTransformable<sf::CircleShape>(eng, "CircleShape");
@@ -52,6 +54,8 @@ void as::priv::RegConvexShape(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectBehaviour("ConvexShape", asBEHAVE_CONSTRUCT, "void f(uint)", asFunctionPtr(createShapeData<sf::ConvexShape, size_t>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("ConvexShape", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyShape<sf::ConvexShape>), asCALL_CDECL_OBJFIRST));
 
+	AS_ASSERT(eng->RegisterObjectMethod("ConvexShape", "ConvexShape& opAssign(const ConvexShape&in)", asMETHODPR(sf::ConvexShape, operator=, (const sf::ConvexShape&), sf::ConvexShape&), asCALL_THISCALL));
+
 	RegisterDrawable<sf::ConvexShape>(eng, "ConvexShape");
 	RegisterShape<sf::ConvexShape>(eng, "ConvexShape");
 	RegisterTransformable<sf::ConvexShape>(eng, "ConvexShape");
@@ -70,6 +74,8 @@ void as::priv::RegRectangleShape(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectBehaviour("RectangleShape", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createShape<sf::RectangleShape>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("RectangleShape", asBEHAVE_CONSTRUCT, "void f(const Vec2&in)", asFunctionPtr(createShapeData<sf::RectangleShape,const sf::Vector2f&>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("RectangleShape", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyShape<sf::RectangleShape>), asCALL_CDECL_OBJFIRST));
+
+	AS_ASSERT(eng->RegisterObjectMethod("RectangleShape", "RectangleShape& opAssign(const RectangleShape&in)", asMETHODPR(sf::RectangleShape, operator=, (const sf::RectangleShape&), sf::RectangleShape&), asCALL_THISCALL));
 
 	RegisterDrawable<sf::RectangleShape>(eng, "RectangleShape");
 	RegisterShape<sf::RectangleShape>(eng, "RectangleShape");

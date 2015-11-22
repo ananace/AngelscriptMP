@@ -71,6 +71,9 @@ void as::priv::RegRect(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectProperty("Rect", "float Width", asOFFSET(sf::FloatRect, width)));
 	AS_ASSERT(eng->RegisterObjectProperty("Rect", "float Height", asOFFSET(sf::FloatRect, height)));
 
+	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Rect& opAssign(const Rect&in)", asMETHODPR(sf::FloatRect, operator=, (const sf::FloatRect&), sf::FloatRect&), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool opEquals(const Rect&in) const", asFUNCTIONPR(sf::operator==, (const sf::FloatRect&, const sf::FloatRect&), bool), asCALL_CDECL_OBJFIRST));
+
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "void set_Center(const Vec2&in)", asFUNCTION(setCenter), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Center() const", asFUNCTION(getCenter), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "void set_Position(const Vec2&in)", asFUNCTION(setPos), asCALL_CDECL_OBJFIRST));
@@ -83,7 +86,5 @@ void as::priv::RegRect(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool Intersects(const Rect&in) const", asMETHODPR(sf::FloatRect, intersects, (const sf::FloatRect&) const, bool), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool Intersects(const Rect&in, Rect&out) const", asMETHODPR(sf::FloatRect, intersects, (const sf::FloatRect&, sf::FloatRect&) const, bool), asCALL_THISCALL));
 	
-	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool opEquals(const Rect&in) const", asFUNCTIONPR(sf::operator==, (const sf::FloatRect&, const sf::FloatRect&), bool), asCALL_CDECL_OBJFIRST));
-
 	AS_ASSERT(eng->SetDefaultNamespace(""));
 }

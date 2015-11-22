@@ -3,6 +3,21 @@
 #include <angelscript.h>
 
 #include <iostream>
+#include <sstream>
+
+#ifndef NDEBUG
+ASException::ASException(const std::string& message, int errcode, const std::string& file, int line) : std::runtime_error("")
+{
+	std::ostringstream oss;
+
+	if (file.empty())
+		oss << message << " (" << errcode << " - " << std::string(GetMessage(errcode)) << ")";
+	else
+		oss << file << ":" << line << ": Call to AngelScript failed with error " << (-errcode) << " - " << std::string(GetMessage(errcode)) << std::endl << ">  The call was: '" << message << "'";
+
+	mMessage = oss.str();
+}
+#endif
 
 void error(const asSMessageInfo* msg)
 {

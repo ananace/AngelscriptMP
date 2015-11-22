@@ -3,7 +3,7 @@
 #include <chrono>
 #include <iosfwd>
 
-class asIScriptEngine;
+class ScriptManager;
 
 #if !defined _MSC_VER || _MSC_VER >= 1900
 typedef std::chrono::high_resolution_clock Clock;
@@ -28,7 +28,7 @@ namespace Time
 {
 	extern Timespan getRunTime();
 	extern Timespan getClockPrecision();
-	extern void registerTimeTypes(asIScriptEngine*);
+	extern void registerTimeTypes(ScriptManager&);
 }
 
 std::ostream& operator<<(std::ostream& os, const Timestamp&);

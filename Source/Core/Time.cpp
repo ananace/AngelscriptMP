@@ -107,22 +107,27 @@ namespace
 	}
 }
 
-void Time::registerTimeTypes(asIScriptEngine* eng)
+void Time::registerTimeTypes(ScriptManager& man)
 {
-	AS_ASSERT(eng->RegisterObjectType("Timestamp", sizeof(Timestamp), asOBJ_VALUE | asGetTypeTraits<Timestamp>()));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Timestamp", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createTimestamp), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Timestamp", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimestamp), asCALL_CDECL_OBJFIRST));
+	man.addExtension("Time", [](asIScriptEngine* eng) {
+		AS_ASSERT(eng->RegisterObjectType("Timestamp", sizeof(Timestamp), asOBJ_VALUE | asGetTypeTraits<Timestamp>()));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Timestamp", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createTimestamp), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Timestamp", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimestamp), asCALL_CDECL_OBJFIRST));
 
-	AS_ASSERT(eng->RegisterObjectType("Timespan", sizeof(Timespan), asOBJ_VALUE | asGetTypeTraits<Timespan>()));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createTimespan), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimespan), asCALL_CDECL_OBJFIRST));
-	
-	AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Count() const", asMETHOD(Timespan, count), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectType("Timespan", sizeof(Timespan), asOBJ_VALUE | asGetTypeTraits<Timespan>()));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createTimespan), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimespan), asCALL_CDECL_OBJFIRST));
 
-	AS_ASSERT(eng->SetDefaultNamespace("Time"));
-	AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(Clock::now), asCALL_CDECL));
-	AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(Time::getRunTime), asCALL_CDECL));
-	AS_ASSERT(eng->SetDefaultNamespace(""));
+		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Count() const", asMETHOD(Timespan, count), asCALL_THISCALL));
+
+		AS_ASSERT(eng->SetDefaultNamespace("Time"));
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(Clock::now), asCALL_CDECL));
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(Time::getRunTime), asCALL_CDECL));
+		AS_ASSERT(eng->SetDefaultNamespace(""));
+	});
+
+	man.registerSerializedType<Timestamp>("Timestamp");
+	man.registerSerializedType<Timespan>("Timespan");
 }
 
 // Let's try to keep Windows.h as far out of the way as possible

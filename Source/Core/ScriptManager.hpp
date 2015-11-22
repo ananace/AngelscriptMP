@@ -6,11 +6,9 @@
 #include <functional>
 #include <list>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 
 #ifndef NDEBUG
-#include <sstream>
 #include <stdexcept>
 
 #define AS_ASSERT(f) do { int __r = (f); if (__r < 0) throw ASException(#f, __r, __FILE__, __LINE__); } while (false)
@@ -18,24 +16,15 @@
 class ASException : public std::runtime_error
 {
 public:
-	ASException(const std::string& message, int errcode, const std::string& file = "", int line = -1) : std::runtime_error("")
-	{
-		std::ostringstream oss;
+	ASException(const std::string& message, int errcode, const std::string& file = "", int line = -1);
+	~ASException() = default;
 
-		if (file.empty())
-			oss << message << " (" << errcode << " - " << GetMessage(errcode) << ")";
-		else
-			oss << file << ":" << line << ": Call to AngelScript failed with error " << (-errcode) << " - " << GetMessage(errcode) << std::endl << ">  The call was: '" << message << "'";
-		
-		mMessage = oss.str();
-	}
-
-	const char* what() const noexcept
+	inline const char* what() const noexcept
 	{
 		return mMessage.c_str();
 	}
 
-	static std::string GetMessage(int code)
+	static inline const char* GetMessage(int code)
 	{
 		switch (code)
 		{
@@ -134,7 +123,7 @@ public:
 	asIScriptEngine* getEngine();
 
 private:
-	std::list<std::tuple<std::string,ScriptExtensionFun>> mExtensions;
+	std::list<std::pair<std::string,ScriptExtensionFun>> mExtensions;
 	std::unordered_map<std::string,std::function<CUserType*()>> mSerializers;
 	asIScriptEngine* mEngine;
 };

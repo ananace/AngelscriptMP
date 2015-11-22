@@ -41,7 +41,7 @@ void Application::init()
 	man.addExtension("Math", RegisterScriptMath);
 	man.addExtension("String", RegisterStdString);
 	man.addExtension("String Utils", RegisterStdStringUtils);
-	man.addExtension("Time", Time::registerTimeTypes);
+	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
 
 	// TODO: Register application classes

@@ -23,6 +23,32 @@ namespace
 	}
 }
 
+namespace sf
+{
+	sf::Vector2f operator*(const sf::Vector2f& a, const sf::Vector2f& b)
+	{
+		return{ a.x * b.x, a.y * b.y };
+	}
+	sf::Vector2f operator/(const sf::Vector2f& a, const sf::Vector2f& b)
+	{
+		return{ a.x / b.x, a.y / b.y };
+	}
+	sf::Vector2f& operator*=(sf::Vector2f& a, const sf::Vector2f& b)
+	{
+		a.x *= b.x;
+		a.y *= b.y;
+
+		return a;
+	}
+	sf::Vector2f& operator/=(sf::Vector2f& a, const sf::Vector2f& b)
+	{
+		a.x /= b.x;
+		a.y /= b.y;
+
+		return a;
+	}
+}
+
 void as::priv::RegVec2(asIScriptEngine* eng)
 {
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
@@ -35,6 +61,23 @@ void as::priv::RegVec2(asIScriptEngine* eng)
 
 	AS_ASSERT(eng->RegisterObjectProperty("Vec2", "float X", asOFFSET(sf::Vector2f, x)));
 	AS_ASSERT(eng->RegisterObjectProperty("Vec2", "float Y", asOFFSET(sf::Vector2f, y)));
+
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opAssign(const Vec2&in)", asMETHODPR(sf::Vector2f, operator=, (const sf::Vector2f&), sf::Vector2f&), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "bool opEquals(const Vec2&in) const", asFUNCTIONPR(sf::operator==, (const sf::Vector2f&, const sf::Vector2f&), bool), asCALL_CDECL_OBJFIRST));
+
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opAdd(const Vec2&in) const", asFUNCTIONPR(sf::operator+, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opSub(const Vec2&in) const", asFUNCTIONPR(sf::operator-, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opDiv(const Vec2&in) const", asFUNCTIONPR(sf::operator/, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opDiv(float) const", asFUNCTIONPR(sf::operator/, (const sf::Vector2f&, float), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opMul(const Vec2&in) const", asFUNCTIONPR(sf::operator*, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opMul(float) const", asFUNCTIONPR(sf::operator*, (const sf::Vector2f&, float), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opAddAssign(const Vec2&in)", asFUNCTIONPR(sf::operator+=, (sf::Vector2f&, const sf::Vector2f&), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opSubAssign(const Vec2&in)", asFUNCTIONPR(sf::operator-=, (sf::Vector2f&, const sf::Vector2f&), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opDivAssign(const Vec2&in)", asFUNCTIONPR(sf::operator/=, (sf::Vector2f&, const sf::Vector2f&), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opDivAssign(float)", asFUNCTIONPR(sf::operator/=, (sf::Vector2f&, float), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opMulAssign(const Vec2&in)", asFUNCTIONPR(sf::operator*=, (sf::Vector2f&, const sf::Vector2f&), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opMulAssign(float)", asFUNCTIONPR(sf::operator*=, (sf::Vector2f&, float), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "float get_Angle() const", asFUNCTIONPR(Math::PolarAngle, (const sf::Vector2f&), float), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "void set_Angle(float ang)", asFUNCTIONPR(Math::SetPolarAngle, (sf::Vector2f&, float), void), asCALL_CDECL_OBJFIRST));
