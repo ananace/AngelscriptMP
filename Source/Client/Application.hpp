@@ -1,10 +1,9 @@
 #pragma once
 
+#include <Core/Engine.hpp>
 #include <Core/ScriptManager.hpp>
 
 #include <SFML/Graphics/RenderWindow.hpp>
-
-#include <atomic>
 
 class Application
 {
@@ -22,6 +21,5 @@ public:
 	sf::RenderTarget& getRT();
 
 private:
-	ScriptManager mMan;
-	sf::RenderWindow mWindow;
+	Engine mEngine;
 };

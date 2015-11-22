@@ -5,23 +5,24 @@ void Engine::add(Args... args)
 {
 	if (has<T>())
 		return;
-	Module toAdd;
+
+	Module toAdd = {};
+	toAdd.Destructor = [](void* mem) { delete (T*)mem; };
 
 	if (mInit)
-		toAdd = { nullptr, [](void* mem) { delete (T*)mem; }, new T(args...) };
+		toAdd.Memory = new T(std::forward<Args>(args)...);
 	else
-		toAdd = {
-		    [args...]() { return new T(args...); },
-		    [](void* mem) { delete (T*)mem; }
-		};
+		toAdd.Constructor = [=]() { return new T(args...); };
 
 	mModules[typeid(T)] = toAdd;
 }
+
 template<typename T>
 T& Engine::get() const
 {
-    return mModules.at(typeid(T));
+    return *(T*)(mModules.at(typeid(T)).Memory);
 }
+
 template<typename T>
 bool Engine::has() const
 {

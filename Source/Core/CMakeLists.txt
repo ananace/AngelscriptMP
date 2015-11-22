@@ -1,9 +1,11 @@
 SET(HEADERS
 	Engine.hpp
+	Engine.inl
 	FileWatcher.hpp
 	Math.hpp
 	ScriptManager.hpp
 	ScriptManager.inl
+	Time.hpp
 
 	AS_Addons/scriptarray/scriptarray.h
 	AS_Addons/scriptbuilder/scriptbuilder.h
@@ -21,6 +23,7 @@ SET(SOURCES
 	FileWatcher.cpp
 	Math.cpp
 	ScriptManager.cpp
+	Time.cpp
 
 	AS_Addons/scriptarray/scriptarray.cpp
 	AS_Addons/scriptbuilder/scriptbuilder.cpp
