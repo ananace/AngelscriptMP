@@ -63,7 +63,11 @@ std::ostream& operator<<(std::ostream& os, const Timestamp& time)
 	std::time_t timeval = system_clock::to_time_t(sys_start + epoch);
 	std::tm tm;
 
+#if defined __STDC_LIB_EXT1__ || defined _MSC_VER
 	localtime_s(&tm, &timeval);
+#else
+	tm = *localtime(&timeval);
+#endif
 
 	auto prev = os.fill('0');
 	os << std::setw(4) << (1900 + tm.tm_year) << "-"
