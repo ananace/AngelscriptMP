@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 template<typename T>
 void ScriptManager::CSimpleType<T>::Store(CSerializedValue *val, void *ptr)
 {

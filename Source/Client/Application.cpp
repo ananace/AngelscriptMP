@@ -1,5 +1,8 @@
 #include "Application.hpp"
+#include "ResourceManager.hpp"
+
 #include <Core/Time.hpp>
+#include <Core/FileWatcher.hpp>
 
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Thread.hpp>
@@ -24,6 +27,8 @@ Application::Application()
 
 	mEngine.add<ScriptManager>();
 	mEngine.add<sf::RenderWindow>();
+	mEngine.add<FileWatcher>();
+	mEngine.add<ResourceManager>();
 }
 
 Application::~Application()
@@ -44,14 +49,16 @@ void Application::init()
 	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
 
-	// TODO: Register application classes
-
+	// TODO: Register application classes for scripts
+	
 	man.init();
+
+	auto& watch = mEngine.get<FileWatcher>();
+
+	watch.addSource(".", true);
 
 	auto end = Clock::now();
 	std::cout << "Init took " << (end - beg) << std::endl;
-
-	mEngine.get<sf::RenderWindow>().create({ 800, 600 }, "AngelscriptMP Client");
 }
 
 void Application::run()
@@ -59,7 +66,11 @@ void Application::run()
 	std::cout << "Application started in " << Time::getRunTime() << std::endl;
 
 	sf::Event ev;
+	std::string modified;
 	auto& window = mEngine.get<sf::RenderWindow>();
+	auto& watch = mEngine.get<FileWatcher>();
+
+	window.create({ 800, 600 }, "AngelscriptMP Client");
 
 	while (window.isOpen())
 	{
@@ -67,6 +78,11 @@ void Application::run()
 		{
 			if (ev.type == sf::Event::Closed)
 				window.close();
+		}
+
+		if (watch.pollChange(modified))
+		{
+			std::cout << modified << " was modified!" << std::endl;
 		}
 
 		window.clear();

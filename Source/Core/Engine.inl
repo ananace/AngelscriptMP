@@ -6,7 +6,7 @@ void Engine::add(Args... args)
 	if (has<T>())
 		return;
 
-	Module toAdd = {};
+	Module toAdd = { nullptr, nullptr, nullptr };
 	toAdd.Destructor = [](void* mem) { delete (T*)mem; };
 
 	if (mInit)
