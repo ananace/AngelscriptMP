@@ -1,5 +1,9 @@
 #include "ResourceManager.hpp"
 
+#include <SFML/Audio/Music.hpp>
+#include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Graphics/Texture.hpp>
+
 ResourceManager::ResourceManager()
 {
 
@@ -33,4 +37,20 @@ void ResourceManager::release(void* data)
 
 			break;
 		}
+}
+
+template<>
+bool ResourceManager::loadResource<sf::Texture>(sf::Texture* res, const std::string& file)
+{
+	return res->loadFromFile(file);
+}
+template<>
+bool ResourceManager::loadResource<sf::SoundBuffer>(sf::SoundBuffer* res, const std::string& file)
+{
+	return res->loadFromFile(file);
+}
+template<>
+bool ResourceManager::loadResource<sf::Music>(sf::Music* res, const std::string& file)
+{
+	return res->openFromFile(file);
 }

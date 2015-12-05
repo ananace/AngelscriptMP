@@ -171,8 +171,13 @@ namespace
 			if (!(ent->d_type & (DT_DIR | DT_LNK)))
 				continue;
 
-			std::string path = folder + '/' + ent->d_name;
+			std::string name = ent->d_name;
+			if (name == "." || name == "..")
+				continue;
+
+			std::string path = folder + '/' + name;
 			subdirs.push_back(path);
+
 			recurseDirectories(path, subdirs);
 		}
 
@@ -186,7 +191,9 @@ namespace
 		{
 			Path = path;
 			int flags = IN_ATTRIB | IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_FROM | IN_MOVED_TO;
-			auto fd = inotify_add_watch(mInotify, path.c_str(), flags);
+			int fd = 0;
+
+			fd = inotify_add_watch(mInotify, path.c_str(), flags);
 			mFDs[fd] = path;
 
 			if (!recurse)
@@ -194,6 +201,12 @@ namespace
 
 			std::list<std::string> subdirs;
 			recurseDirectories(path, subdirs);
+
+			for (auto& subdir : subdirs)
+			{
+				fd = inotify_add_watch(mInotify, subdir.c_str(), flags);
+				mFDs[fd] = subdir;
+			}
 		}
 
 		~ChangeSourceImpl()
@@ -271,8 +284,6 @@ void FileWatcher::addSource(const std::string& path, bool recurse)
 	auto source = new ChangeSourceImpl(path, recurse);
 
 	mChangeSources.push_back(source);
-
-
 }
 void FileWatcher::removeSource(const std::string& path)
 {

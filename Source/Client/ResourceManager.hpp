@@ -68,6 +68,9 @@ private:
 		void* Memory;
 	};
 
+	template<typename T>
+	bool loadResource(T* res, const std::string& file);
+
 	std::unordered_map<std::string, Resource> mResources;
 };
 

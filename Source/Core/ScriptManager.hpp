@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Script.hpp"
+
 #include <angelscript.h>
 #include <Core/AS_Addons/serializer/serializer.h>
 
@@ -49,6 +51,8 @@ public:
 	void registerSerializedType(const std::string& name);
 	void registerSerializedType(const std::string& name, const std::function<CUserType*()>& ser);
 
+	Script* getScript(const std::string& file);
+
 	void addDefine(const std::string& define);
 
 	void init();
@@ -56,8 +60,9 @@ public:
 	asIScriptEngine* getEngine();
 
 private:
-	std::list<std::pair<std::string,ScriptExtensionFun>> mExtensions;
-	std::unordered_map<std::string,std::function<CUserType*()>> mSerializers;
+	std::list<std::pair<std::string, ScriptExtensionFun>> mExtensions;
+	std::unordered_map<std::string, Script> mScripts;
+	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;
 	asIScriptEngine* mEngine;
 };
 

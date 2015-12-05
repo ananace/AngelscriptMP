@@ -163,6 +163,21 @@ void ScriptManager::init()
 	mEngine = eng;
 }
 
+Script* ScriptManager::getScript(const std::string& file)
+{
+	if (mScripts.count(file) > 0)
+		return &mScripts.at(file);
+
+	Script newScript(*this, file);
+	if (newScript.reload())
+	{
+		mScripts[file] = std::move(newScript);
+		return &mScripts.at(file);
+	}
+
+	return nullptr;
+}
+
 asIScriptEngine* ScriptManager::getEngine()
 {
 	return mEngine;

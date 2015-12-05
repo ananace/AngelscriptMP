@@ -3,6 +3,7 @@ SET(HEADERS
 	Engine.inl
 	FileWatcher.hpp
 	Math.hpp
+	Script.hpp
 	ScriptManager.hpp
 	ScriptManager.inl
 	Time.hpp
@@ -22,6 +23,7 @@ SET(SOURCES
 	Engine.cpp
 	FileWatcher.cpp
 	Math.cpp
+	Script.cpp
 	ScriptManager.cpp
 	Time.cpp
 

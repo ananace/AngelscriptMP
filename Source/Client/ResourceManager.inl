@@ -23,7 +23,7 @@ template<typename T>
 ResourceManager::res_ptr<T>::~res_ptr()
 {
 	if (mData)
-		mManager->release(mData);
+		mManager.release(mData);
 }
 
 template<typename T>
@@ -78,21 +78,6 @@ template<typename T>
 inline const T* ResourceManager::res_ptr<T>::operator->() const
 {
 	return mData;
-}
-
-namespace
-{
-	template<typename T>
-	bool loadResource(T* res, const std::string& file)
-	{
-		return res->loadFromFile(file);
-	}
-
-	template<typename T = sf::Music>
-	bool loadResource(sf::Music* res, const std::string& file)
-	{
-		return res->openFromFile(file);
-	}
 }
 
 template<typename T>
