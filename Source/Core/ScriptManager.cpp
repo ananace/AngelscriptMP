@@ -1,7 +1,10 @@
 #include "ScriptManager.hpp"
 
+#include <SFML/System/InputStream.hpp>
+
 #include <angelscript.h>
 
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -159,24 +162,40 @@ void ScriptManager::init()
 	}
 #undef CHECK_COUNT
 
-	eng->ClearMessageCallback();
+	eng->ClearMessageCallback();ScriptManager::
 	mEngine = eng;
 }
 
-Script* ScriptManager::getScript(const std::string& file)
+bool ScriptManager::loadFromFile(const std::string& file, ScriptType type)
 {
-	if (mScripts.count(file) > 0)
-		return &mScripts.at(file);
+	std::ifstream ifs(file.c_str());
+	if (!ifs)
+		return false;
 
-	Script newScript(*this, file);
-	if (newScript.reload())
-	{
-		mScripts[file] = std::move(newScript);
-		return &mScripts.at(file);
-	}
+	ifs.seekg(0, std::ios::end);
+	auto len = ifs.tellg();
+	ifs.seekg(0, std::ios::beg);
 
-	return nullptr;
+	std::vector<char> data(len);
+	ifs.read(&data[0], len);
+
+	return loadFromMemory(file, &data[0], len, type);
 }
+bool ScriptManager::loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type)
+{
+
+
+
+	return false;
+}
+bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type)
+{
+	std::vector<char> data(stream.getSize());
+	stream.read(&data[0], stream.getSize());
+
+	return loadFromMemory(name, &data[0], stream.getSize(), type);
+}
+
 
 asIScriptEngine* ScriptManager::getEngine()
 {

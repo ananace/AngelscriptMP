@@ -15,6 +15,8 @@
 
 #define AS_ASSERT(f) do { int __r = (f); if (__r < 0) throw ASException(#f, __r, __FILE__, __LINE__); } while (false)
 
+namespace sf { class InputStream; }
+
 class ASException : public std::runtime_error
 {
 public:
@@ -44,6 +46,12 @@ public:
 		void CleanupUserData(CSerializedValue *val);
 	};
 
+	enum ScriptType
+	{
+		Type_Text,
+		Type_Bytecode
+	}
+
 	typedef std::function<void(asIScriptEngine*)> ScriptExtensionFun;
 
 	void addExtension(const std::string& name, const ScriptExtensionFun& function);
@@ -51,7 +59,9 @@ public:
 	void registerSerializedType(const std::string& name);
 	void registerSerializedType(const std::string& name, const std::function<CUserType*()>& ser);
 
-	Script* getScript(const std::string& file);
+	bool loadFromFile(const std::string& file, ScriptType type = Type_Text);
+	bool loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type = Type_Text);
+	bool loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type = Type_Text);
 
 	void addDefine(const std::string& define);
 
