@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Script.hpp"
-
 #include <angelscript.h>
 #include <Core/AS_Addons/serializer/serializer.h>
+#include <Core/AS_Addons/scriptbuilder/scriptbuilder.h>
 
 #include <functional>
 #include <list>
@@ -50,7 +49,7 @@ public:
 	{
 		Type_Text,
 		Type_Bytecode
-	}
+	};
 
 	typedef std::function<void(asIScriptEngine*)> ScriptExtensionFun;
 
@@ -70,10 +69,18 @@ public:
 	asIScriptEngine* getEngine();
 
 private:
+	struct Script
+	{
+		std::string Name;
+		bool DirectLoad;
+	};
+
+	std::list<asIScriptObject*> mObjects;
 	std::list<std::pair<std::string, ScriptExtensionFun>> mExtensions;
 	std::unordered_map<std::string, Script> mScripts;
 	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;
 	asIScriptEngine* mEngine;
+	CScriptBuilder mBuilder;
 };
 
 #include "ScriptManager.inl"

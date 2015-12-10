@@ -28,6 +28,7 @@ template<typename T>
 void ScriptManager::registerSerializedType(const std::string& name)
 {
 	registerSerializedType(name, []() -> CUserType* {
-		return new CSimpleType<T>();
+		static CSimpleType<T> ser;
+		return &ser;
 	});
 }

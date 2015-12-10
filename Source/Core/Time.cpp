@@ -3,13 +3,14 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <ctime>
 
 namespace
 {
-	auto start = Clock::now();
-	auto sys_start = std::chrono::system_clock::now();
+	const auto start = Clock::now();
+	const auto sys_start = std::chrono::system_clock::now();
 }
 
 Timespan Time::getClockPrecision()
@@ -110,26 +111,42 @@ namespace
 	{
 		return a - b;
 	}
+
+	std::string toStringStamp(const Timestamp& s)
+	{
+		std::ostringstream oss;
+		oss << s;
+		return oss.str();
+	}
+	std::string toStringSpan(const Timespan& s)
+	{
+		std::ostringstream oss;
+		oss << s;
+		return oss.str();
+	}
 }
 
 void Time::registerTimeTypes(ScriptManager& man)
 {
 	man.addExtension("Time", [](asIScriptEngine* eng) {
 		AS_ASSERT(eng->RegisterObjectType("Timestamp", sizeof(Timestamp), asOBJ_VALUE | asGetTypeTraits<Timestamp>()));
+		AS_ASSERT(eng->RegisterObjectType("Timespan", sizeof(Timespan), asOBJ_VALUE | asGetTypeTraits<Timespan>()));
+
 		AS_ASSERT(eng->RegisterObjectBehaviour("Timestamp", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createTimestamp), asCALL_CDECL_OBJFIRST));
 		AS_ASSERT(eng->RegisterObjectBehaviour("Timestamp", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimestamp), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timestamp& opAssign(const Timestamp&in)", asMETHODPR(Timestamp, operator=, (const Timestamp&), Timestamp&), asCALL_THISCALL));
 
-		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timespan& opSub(const Timestamp&in) const", asFUNCTIONPR(opSub, (const Timestamp&, const Timestamp&), Timespan), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timespan opSub(const Timestamp&in) const", asFUNCTIONPR(opSub, (const Timestamp&, const Timestamp&), Timespan), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "string ToString() const", asFUNCTION(toStringStamp), asCALL_CDECL_OBJFIRST));
 
-		AS_ASSERT(eng->RegisterObjectType("Timespan", sizeof(Timespan), asOBJ_VALUE | asGetTypeTraits<Timespan>()));
 		AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createTimespan), asCALL_CDECL_OBJFIRST));
 		AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimespan), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "Timespan& opAssign(const Timespan&in)", asMETHODPR(Timespan, operator=, (const Timespan&), Timespan&), asCALL_THISCALL));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Count() const", asMETHOD(Timespan, count), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "string ToString() const", asFUNCTION(toStringSpan), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->SetDefaultNamespace("Time"));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(Clock::now), asCALL_CDECL));

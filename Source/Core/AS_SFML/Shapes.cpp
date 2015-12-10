@@ -51,6 +51,7 @@ void as::priv::RegConvexShape(asIScriptEngine* eng)
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
 	AS_ASSERT(eng->RegisterObjectType("ConvexShape", sizeof(sf::ConvexShape), asOBJ_VALUE | asGetTypeTraits<sf::ConvexShape>()));
+	AS_ASSERT(eng->RegisterObjectBehaviour("ConvexShape", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createShape<sf::ConvexShape>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("ConvexShape", asBEHAVE_CONSTRUCT, "void f(uint)", asFunctionPtr(createShapeData<sf::ConvexShape, size_t>), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("ConvexShape", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyShape<sf::ConvexShape>), asCALL_CDECL_OBJFIRST));
 

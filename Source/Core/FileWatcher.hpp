@@ -30,6 +30,8 @@ public:
 	bool pollChange(std::string& out);
 	void update();
 
+	static void recurseDirectory(const std::string& dir, std::list<std::string>& output, const std::string& wildcard = "*");
+
 private:
 	std::list<std::string> mChangeQueue;
 	std::vector<ChangeSource*> mChangeSources;

@@ -4,6 +4,7 @@
 
 #include <angelscript.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -95,22 +96,58 @@ inline const char* ASException::GetMessage(int code) noexcept
 }
 #endif
 
-void error(const asSMessageInfo* msg)
+namespace
 {
-	if (msg->type == asMSGTYPE_ERROR)
-		return;
 
-	std::cerr << "Angelscript ";
-	switch (msg->type)
+	void error(const asSMessageInfo* msg)
 	{
+		std::cerr << "Angelscript ";
+		switch (msg->type)
+		{
 		case asMSGTYPE_ERROR: std::cerr << "error"; break;
 		case asMSGTYPE_WARNING: std::cerr << "warning"; break;
 		case asMSGTYPE_INFORMATION: std::cerr << "info"; break;
+		}
+
+		if (msg->section && msg->section[0] != 0)
+			std::cerr << " (" << msg->section << ":" << msg->row << ":" << msg->col << ")";
+		std::cerr << ";" << std::endl
+			<< ">  " << msg->message << std::endl;
 	}
-	if (msg->section && msg->section[0] != 0)
-		std::cerr << " (" << msg->section << ":" << msg->row << ":" << msg->col << ")";
-	std::cerr << ";" << std::endl
-		<< ">  " << msg->message << std::endl;
+
+	class BytecodeStore : public asIBinaryStream
+	{
+	public:
+		BytecodeStore() : mTellg(0) { }
+		BytecodeStore(const char* data, size_t len) :
+			mTellg(0)
+		{
+			mStore.assign(data, data + len);
+		}
+
+		void Read(void *ptr, asUINT size)
+		{
+			char* data = (char*)ptr;
+
+			for (uint32_t i = 0; i < size; ++i)
+			{
+				data[i] = mStore[mTellg + i];
+			}
+
+			mTellg += size;
+		}
+		void Write(const void *ptr, asUINT size)
+		{
+			const char* data = (const char*)ptr;
+
+			for (uint32_t i = 0; i < size; ++i)
+				mStore.push_back(data[i]);
+		}
+
+	private:
+		std::vector<char> mStore;
+		size_t mTellg;
+	};
 }
 
 void ScriptManager::addExtension(const std::string& name, const ScriptExtensionFun& function)
@@ -162,7 +199,7 @@ void ScriptManager::init()
 	}
 #undef CHECK_COUNT
 
-	eng->ClearMessageCallback();ScriptManager::
+	//eng->ClearMessageCallback();
 	mEngine = eng;
 }
 
@@ -173,27 +210,112 @@ bool ScriptManager::loadFromFile(const std::string& file, ScriptType type)
 		return false;
 
 	ifs.seekg(0, std::ios::end);
-	auto len = ifs.tellg();
+	size_t len = size_t(ifs.tellg());
 	ifs.seekg(0, std::ios::beg);
 
 	std::vector<char> data(len);
 	ifs.read(&data[0], len);
 
-	return loadFromMemory(file, &data[0], len, type);
+	// Remove extraneous nullbytes
+	auto it = std::remove(data.begin(), data.end(), '\0');
+	if (it != data.end())
+		data.erase(it, data.end());
+
+	return loadFromMemory(file, &data[0], data.size(), type);
 }
 bool ScriptManager::loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type)
 {
+	bool reload = mScripts.count(name) > 0;
+
+	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
+	CSerializer serial;
+
+	if (reload && module)
+	{
+		for (auto& reg : mSerializers)
+			serial.AddUserType(reg.second(), reg.first);
+
+		serial.Store(module);
+	}
+
+	BytecodeStore bcode;
+	if (type == Type_Text)
+	{
+		static const char* scratchName = "!!ScratchSpace!!";
+
+		mEngine->DiscardModule(scratchName);
+		mBuilder.StartNewModule(mEngine, scratchName);
+
+		mBuilder.AddSectionFromMemory(name.c_str(), (const char*)data, len);
+
+		int r = mBuilder.BuildModule();
+		if (r < 0)
+		{
+			puts(ASException::GetMessage(r));
+			return false;
+		}
+
+#ifdef NDEBUG
+		mBuilder.GetModule()->SaveByteCode(&bcode, true);
+#else
+		mBuilder.GetModule()->SaveByteCode(&bcode, false);
+#endif
+	}
+	else
+	{
+		bcode = BytecodeStore((const char*)data, len);
+	}
+
+	if (module)
+		module->Discard();
+	module = mEngine->GetModule(name.c_str(), asGM_ALWAYS_CREATE);
+	int r = module->LoadByteCode(&bcode);
+	if (r < 0)
+		return false;
+
+	if (reload)
+	{
+		serial.Restore(module);
+
+		mEngine->GarbageCollect(asGC_FULL_CYCLE | asGC_DESTROY_GARBAGE);
+
+		auto* fun = module->GetFunctionByName("OnReload");
+		if (fun)
+		{
+			auto* ctx = mEngine->RequestContext();
+			ctx->Prepare(fun);
+
+			ctx->Execute();
+
+			ctx->Unprepare();
+			mEngine->ReturnContext(ctx);
+		}
+	}
+	else
+	{
+		auto* fun = module->GetFunctionByName("OnLoad");
+		if (fun)
+		{
+			auto* ctx = mEngine->RequestContext();
+			ctx->Prepare(fun);
+
+			ctx->Execute();
+
+			ctx->Unprepare();
+			mEngine->ReturnContext(ctx);
+		}
+	}
 
 
-
-	return false;
+	return true;
 }
 bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type)
 {
-	std::vector<char> data(stream.getSize());
-	stream.read(&data[0], stream.getSize());
+	auto len = stream.getSize();
+	std::vector<char> data(len);
+	stream.read(&data[0], len);
 
-	return loadFromMemory(name, &data[0], stream.getSize(), type);
+	return loadFromMemory(name, &data[0], len, type);
 }
 
 
