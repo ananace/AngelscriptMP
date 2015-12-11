@@ -4,24 +4,37 @@
 
 namespace
 {
-	void createText(void* mem)
+	void createText(asIScriptGeneric* gen)
 	{
-		new (mem) sf::Text();
+		sf::Font* font = nullptr;
+		if ((font = (sf::Font*)gen->GetEngine()->GetUserData(0xF077)))
+			new (gen->GetObject()) sf::Text("", *font);
+		else
+			new (gen->GetObject()) sf::Text();
 	}
-	template<typename... Args>
-	void createTextData(sf::Text* mem, Args... args)
+	void createTextData(asIScriptGeneric* gen)
 	{
-		new (mem) sf::Text();
-		mem->setString(args...);
+		const std::string* str = (const std::string*)gen->GetArgObject(0);
+
+		sf::Font* font = nullptr;
+		if ((font = (sf::Font*)gen->GetEngine()->GetUserData(0xF077)))
+			new (gen->GetObject()) sf::Text(*str, *font);
+		else
+		{
+			new (gen->GetObject()) sf::Text();
+			((sf::Text*)gen->GetObject())->setString(*str);
+		}
 	}
 	void destroyText(sf::Text* mem)
 	{
 		mem->~Text();
 	}
 
-	std::string getTextString(const sf::Text& t)
+	void getTextString(asIScriptGeneric* gen)
 	{
-		return t.getString();
+		auto* t = (const sf::Text*)gen->GetObject();
+
+		new (gen->GetAddressOfReturnLocation()) std::string(t->getString());
 	}
 	void setTextString(sf::Text& t, const std::string& s)
 	{
@@ -34,8 +47,8 @@ void as::priv::RegText(asIScriptEngine* eng)
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
 	AS_ASSERT(eng->RegisterObjectType("Text", sizeof(sf::Text), asOBJ_VALUE | asGetTypeTraits<sf::Text>()));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createText), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_CONSTRUCT, "void f(const ::string&in)", asFunctionPtr(createTextData<const std::string&>), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createText), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_CONSTRUCT, "void f(const ::string&in)", asFunctionPtr(createTextData), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Text", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyText), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->SetDefaultNamespace("sf::Text"));
@@ -52,11 +65,13 @@ void as::priv::RegText(asIScriptEngine* eng)
 	RegisterDrawable<sf::Text>(eng, "Text");
 	RegisterTransformable<sf::Text>(eng, "Text");
 
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Font@ get_Font() const", asMETHOD(sf::Text, getFont), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "void SetFont(const Font@)", asMETHOD(sf::Text, setFont), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "uint get_CharacterSize() const", asMETHOD(sf::Text, getCharacterSize), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_CharacterSize(uint)", asMETHOD(sf::Text, setCharacterSize), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Color& get_Color() const", asMETHOD(sf::Text, getColor), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_Color(const Color&in)", asMETHOD(sf::Text, setColor), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod("Text", "const ::string& get_String() const", asFUNCTION(getTextString), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "const ::string& get_String() const", asFUNCTION(getTextString), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_String(const ::string&in)", asFUNCTION(setTextString), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "uint get_Style() const", asMETHOD(sf::Text, getStyle), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_Style(uint)", asMETHOD(sf::Text, setStyle), asCALL_THISCALL));

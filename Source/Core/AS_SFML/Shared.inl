@@ -9,6 +9,25 @@ namespace as
 namespace priv
 {
 
+namespace
+{
+	template<typename T>
+	void getLocalBounds(asIScriptGeneric* gen)
+	{
+		T* obj = (T*)gen->GetObject();
+
+		new (gen->GetAddressOfReturnLocation()) sf::FloatRect(obj->getLocalBounds());
+	}
+
+	template<typename T>
+	void getGlobalBounds(asIScriptGeneric* gen)
+	{
+		T* obj = (T*)gen->GetObject();
+
+		new (gen->GetAddressOfReturnLocation()) sf::FloatRect(obj->getGlobalBounds());
+	}
+}
+
 template<typename T>
 void draw(sf::RenderTarget& target, const T& toDraw)
 {
@@ -18,8 +37,8 @@ void draw(sf::RenderTarget& target, const T& toDraw)
 template<typename T>
 void RegisterDrawable(asIScriptEngine* eng, const char* name)
 {
-	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_LocalBounds() const", asMETHOD(T, getLocalBounds), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_GlobalBounds() const", asMETHOD(T, getGlobalBounds), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_LocalBounds() const", asFUNCTION(getLocalBounds<T>), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_GlobalBounds() const", asFUNCTION(getGlobalBounds<T>), asCALL_GENERIC));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Renderer", ("void Draw(const " + std::string(name) + "&in)").c_str(), asFUNCTIONPR(draw, (sf::RenderTarget&, const T&), void), asCALL_CDECL_OBJFIRST));
 }

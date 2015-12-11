@@ -3,6 +3,7 @@
 
 #include <SFML/Audio/Music.hpp>
 #include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Texture.hpp>
 
 namespace
@@ -87,19 +88,35 @@ void ResourceManager::registerScript(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("Music", "sf::Music@ get_Music()", asMETHODPR(res_ptr<sf::Music>, operator*, (), sf::Music&), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("Music", "const sf::Music@ get_Music() const", asMETHODPR(res_ptr<sf::Music>, operator*, () const, const sf::Music&), asCALL_THISCALL));
 
+		AS_ASSERT(eng->RegisterObjectType("Font", sizeof(Font), asOBJ_VALUE | asGetTypeTraits<Music>()));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Font", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createRes<sf::Font>), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Font", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyRes<sf::Font>), asCALL_CDECL_OBJFIRST));
+
+		AS_ASSERT(eng->RegisterObjectMethod("Font", "Font& opAssign(const Font&in)", asMETHOD(res_ptr<sf::Font>, operator=), asCALL_THISCALL));
+
+		AS_ASSERT(eng->RegisterObjectMethod("Font", "sf::Font@ get_Font()", asMETHODPR(res_ptr<sf::Font>, operator*, (), sf::Font&), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("Font", "const sf::Font@ get_Font() const", asMETHODPR(res_ptr<sf::Font>, operator*, () const, const sf::Font&), asCALL_THISCALL));
+
 
 		AS_ASSERT(eng->RegisterGlobalFunction("Texture GetTexture(const string&in)", asMETHOD(ResourceManager, get<sf::Texture>), asCALL_THISCALL_ASGLOBAL, this));
 		AS_ASSERT(eng->RegisterGlobalFunction("SoundBuffer GetSoundBuffer(const string&in)", asMETHOD(ResourceManager, get<sf::SoundBuffer>), asCALL_THISCALL_ASGLOBAL, this));
 		AS_ASSERT(eng->RegisterGlobalFunction("Music GetMusic(const string&in)", asMETHOD(ResourceManager, get<sf::Music>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Font GetFont(const string&in)", asMETHOD(ResourceManager, get<sf::Font>), asCALL_THISCALL_ASGLOBAL, this));
 
 		AS_ASSERT(eng->SetDefaultNamespace(""));
 	});
 
+	man.registerSerializedType<res_ptr<sf::Texture>>("Font");
 	man.registerSerializedType<res_ptr<sf::Texture>>("Texture");
 	man.registerSerializedType<res_ptr<sf::Texture>>("SoundBuffer");
 	man.registerSerializedType<res_ptr<sf::Texture>>("Music");
 }
 
+template<>
+bool ResourceManager::loadResource<sf::Font>(sf::Font* res, const std::string& file)
+{
+	return res->loadFromFile(file);
+}
 template<>
 bool ResourceManager::loadResource<sf::Texture>(sf::Texture* res, const std::string& file)
 {

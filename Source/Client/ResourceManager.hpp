@@ -7,6 +7,7 @@
 
 namespace sf
 {
+	class Font;
 	class Music;
 	class SoundBuffer;
 	class Texture;
@@ -59,6 +60,7 @@ public:
 
 	void registerScript(ScriptManager& man);
 
+	typedef res_ptr<sf::Font> Font;
 	typedef res_ptr<sf::Music> Music;
 	typedef res_ptr<sf::SoundBuffer> Sound;
 	typedef res_ptr<sf::Texture> Texture;

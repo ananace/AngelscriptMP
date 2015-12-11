@@ -61,9 +61,9 @@ void as::priv::RegRect(asIScriptEngine* eng)
 		
 	AS_ASSERT(eng->RegisterObjectType("Rect", sizeof(sf::FloatRect), asOBJ_VALUE | asGetTypeTraits<sf::FloatRect>()));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f()", asFUNCTIONPR(createRect, (void*), void), asCALL_CDECL_OBJLAST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(const Rect&in)", asFUNCTIONPR(createRect, (void*, const sf::FloatRect&), void), asCALL_CDECL_OBJLAST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(const Vec2&in pos, const Vec2&in size)", asFUNCTIONPR(createRect, (void*, const sf::Vector2f&, const sf::Vector2f&), void), asCALL_CDECL_OBJLAST));
-	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(float left, float top, float width, float height)", asFUNCTIONPR(createRect, (void*, float,float,float,float), void), asCALL_CDECL_OBJLAST));
+	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(const Rect&in)", asFUNCTIONPR(createRect, (void*, const sf::FloatRect&), void), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(const Vec2&in pos, const Vec2&in size)", asFUNCTIONPR(createRect, (void*, const sf::Vector2f&, const sf::Vector2f&), void), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_CONSTRUCT, "void f(float left, float top, float width, float height)", asFUNCTIONPR(createRect, (void*, float,float,float,float), void), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectBehaviour("Rect", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destructRect), asCALL_CDECL_OBJLAST));
 
 	AS_ASSERT(eng->RegisterObjectProperty("Rect", "float Left", asOFFSET(sf::FloatRect, left)));

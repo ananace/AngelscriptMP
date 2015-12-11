@@ -18,6 +18,7 @@ const SFMLType as::priv::Types[TypeCount] = {
 	{ "RectangleShape", RegRectangleShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::RectangleShape>(); } },
 	{ "ConvexShape", RegConvexShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::ConvexShape>(); } },
 	{ "Sprite", RegSprite, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Sprite>(); } },
+	{ "Font", RegFont, nullptr },
 	{ "Text", RegText, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Text>(); } },
 	{ "Music", RegMusic, nullptr },
 	{ "Sound", RegSound, nullptr },
