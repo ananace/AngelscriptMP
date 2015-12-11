@@ -11,6 +11,7 @@ const SFMLType as::priv::Types[TypeCount] = {
 	{ "Vec2", RegVec2, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Vector2f>(); } },
 	{ "Vec3", RegVec3, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Vector3f>(); } },
 	{ "Rect", RegRect, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::FloatRect>(); } },
+	{ "Renderer", RegRenderer },
 	{ "Color", RegColor, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Color>(); } },
 	{ "Texture", RegTexture, nullptr },
 	{ "Shapes::Circle", RegCircleShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::CircleShape>(); } },
@@ -20,5 +21,8 @@ const SFMLType as::priv::Types[TypeCount] = {
 	{ "Text", RegText, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Text>(); } },
 	{ "Music", RegMusic, nullptr },
 	{ "Sound", RegSound, nullptr },
-	{ "Listener", RegListener, nullptr }
+	{ "Listener", RegListener, nullptr },
+	{ "Keyboard", RegKeyboard },
+	{ "Joystick", RegJoystick },
+	{ "Mouse", RegMouse }
 };

@@ -34,9 +34,13 @@ SET(SOURCES
 
 	AS_SFML/AS_SFML.cpp
 	AS_SFML/Color.cpp
+	AS_SFML/Joystick.cpp
+	AS_SFML/Keyboard.cpp
 	AS_SFML/Listener.cpp
+	AS_SFML/Mouse.cpp
 	AS_SFML/Music.cpp
 	AS_SFML/Rect.cpp
+	AS_SFML/Renderer.cpp
 	AS_SFML/Shapes.cpp
 	AS_SFML/Shared.cpp
 	AS_SFML/Sound.cpp

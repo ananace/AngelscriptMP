@@ -124,6 +124,10 @@ namespace
 		oss << s;
 		return oss.str();
 	}
+
+	int64_t nanoseconds(const Timespan& s) { return std::chrono::duration_cast<std::chrono::nanoseconds>(s).count(); }
+	int64_t milliseconds(const Timespan& s) { return std::chrono::duration_cast<std::chrono::milliseconds>(s).count(); }
+	float seconds(const Timespan& s) { return std::chrono::duration_cast<std::chrono::duration<float>>(s).count(); }
 }
 
 void Time::registerTimeTypes(ScriptManager& man)
@@ -147,6 +151,10 @@ void Time::registerTimeTypes(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "Timespan& opAssign(const Timespan&in)", asMETHODPR(Timespan, operator=, (const Timespan&), Timespan&), asCALL_THISCALL));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Count() const", asMETHOD(Timespan, count), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Nanoseconds() const", asFUNCTION(nanoseconds), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Milliseconds() const", asFUNCTION(milliseconds), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "float get_Seconds() const", asFUNCTION(seconds), asCALL_CDECL_OBJFIRST));
+
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "string opConv() const", asFUNCTION(toStringSpan), asCALL_CDECL_OBJFIRST));
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "string ToString() const", asFUNCTION(toStringSpan), asCALL_CDECL_OBJFIRST));
 

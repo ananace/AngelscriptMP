@@ -229,14 +229,26 @@ void Application::run()
 	auto& watch = mEngine.get<FileWatcher>();
 
 	window.create({ 800, 600 }, "AngelscriptMP Client");
+	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
+	{
+		sf::Vector2f size = (sf::Vector2f)window.getSize();
+		uiView.setSize(size);
+		uiView.setCenter(size / 2.f);
+
+		gameView.setSize(gameView.getSize().y * (size.x / size.y), gameView.getSize().y);
+	}
+
+	const Timespan tickLength = std::chrono::milliseconds(15);
+	Timespan tickTime;
+
+	auto framepoint = Clock::now();
 
 	while (window.isOpen())
 	{
-		if (window.pollEvent(ev))
-		{
-			if (ev.type == sf::Event::Closed)
-				window.close();
-		}
+		auto point = Clock::now();
+		Timespan dt = point - framepoint;
+		framepoint = point;
+		tickTime += dt;
 
 		if (watch.pollChange(modified))
 		{
@@ -248,7 +260,57 @@ void Application::run()
 			}
 		}
 
+
+		if (window.pollEvent(ev))
+		{
+			if (ev.type == sf::Event::Closed)
+				window.close();
+			else if (ev.type == sf::Event::Resized)
+			{
+				sf::Vector2f size = (sf::Vector2f)window.getSize();
+				uiView.setSize(size);
+				uiView.setCenter(size / 2.f);
+
+				gameView.setSize(gameView.getSize().y * (size.x / size.y), gameView.getSize().y);
+			}
+			else
+			{
+				if (ev.type == sf::Event::KeyPressed ||
+					ev.type == sf::Event::KeyReleased)
+				{
+					bool pressed = ev.type == sf::Event::KeyPressed;
+					
+					// man.runHook<void, bool>("Key."
+				}
+			}
+
+			// TODO: Pass events
+			// FIXME: How?
+		}
+
+		while (tickTime >= tickLength)
+		{
+			// Run fixed updates
+			// man.runHook<void, const Timespan&>("Tick", tickLength);
+
+			tickTime -= tickLength;
+		}
+
+		// Run per-frame updates
+		// man.runHook<void, const Timespan&>("Update", dt);
+
 		window.clear();
+
+		window.setView(gameView);
+
+		// Draw things
+		// man.runHook<void, sf::RenderTarget*>("Draw", &window);
+
+		gameView = window.getView();
+		window.setView(uiView);
+
+		// Draw things
+		// man.runHook<void, sf::RenderTarget*>("DrawUI", &window);
 
 		window.display();
 	}

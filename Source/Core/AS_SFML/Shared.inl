@@ -2,6 +2,7 @@
 
 #include <SFML/System/Vector2.hpp>
 #include <SFML/System/Vector3.hpp>
+#include <SFML/Graphics/RenderTarget.hpp>
 
 namespace as
 {
@@ -9,10 +10,18 @@ namespace priv
 {
 
 template<typename T>
+void draw(sf::RenderTarget& target, const T& toDraw)
+{
+	target.draw(toDraw);
+}
+
+template<typename T>
 void RegisterDrawable(asIScriptEngine* eng, const char* name)
 {
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_LocalBounds() const", asMETHOD(T, getLocalBounds), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_GlobalBounds() const", asMETHOD(T, getGlobalBounds), asCALL_THISCALL));
+
+	AS_ASSERT(eng->RegisterObjectMethod("Renderer", ("void Draw(const " + std::string(name) + "&in)").c_str(), asFUNCTIONPR(draw, (sf::RenderTarget&, const T&), void), asCALL_CDECL_OBJFIRST));
 }
 template<typename T>
 void RegisterTransformable(asIScriptEngine* eng, const char* name)

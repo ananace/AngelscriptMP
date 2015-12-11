@@ -304,7 +304,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		mEngine->ReturnContext(ctx);
 	}
 
-	if (fun)
+	if (fun = module->GetFunctionByName("OnLoad"))
+		module->RemoveFunction(fun);
+	if (fun = module->GetFunctionByName("OnReload"))
 		module->RemoveFunction(fun);
 
 	return true;
