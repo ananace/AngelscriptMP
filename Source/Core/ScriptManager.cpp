@@ -273,6 +273,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	if (r < 0)
 		return false;
 
+
+	auto* fun = module->GetFunctionByName("OnLoad");
 	if (reload)
 	{
 		serial.Restore(module);
@@ -291,21 +293,19 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 			mEngine->ReturnContext(ctx);
 		}
 	}
-	else
+	else if (fun)
 	{
-		auto* fun = module->GetFunctionByName("OnLoad");
-		if (fun)
-		{
-			auto* ctx = mEngine->RequestContext();
-			ctx->Prepare(fun);
+		auto* ctx = mEngine->RequestContext();
+		ctx->Prepare(fun);
 
-			ctx->Execute();
+		ctx->Execute();
 
-			ctx->Unprepare();
-			mEngine->ReturnContext(ctx);
-		}
+		ctx->Unprepare();
+		mEngine->ReturnContext(ctx);
 	}
 
+	if (fun)
+		module->RemoveFunction(fun);
 
 	return true;
 }
