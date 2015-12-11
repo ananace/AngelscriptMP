@@ -165,7 +165,7 @@ void ScriptManager::init()
 		eng->SetDefaultNamespace("Hooks");
 
 		eng->RegisterGlobalFunction("void Add(const string&in, const string&in)", asMETHOD(ScriptManager, addHookFromScript), asCALL_THISCALL_ASGLOBAL, this);
-		eng->RegisterGlobalFunction("void Remove(const string&in, const string&in)", asMETHOD(ScriptManager, addHookFromScript), asCALL_THISCALL_ASGLOBAL, this);
+		eng->RegisterGlobalFunction("void Remove(const string&in, const string&in = \"\")", asMETHOD(ScriptManager, removeHookFromScript), asCALL_THISCALL_ASGLOBAL, this);
 
 		eng->SetDefaultNamespace("");
 	});
@@ -254,6 +254,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 			{
 				serial.AddExtraObjectToStore(obj);
 				toPersist.push_back(obj);
+				obj->AddRef();
+
 				it = mPersistant.erase(it);
 			}
 			else
@@ -313,6 +315,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it);
 			mPersistant.push_back(newObj);
 
+			bool released = false;
+
 			for (auto& hooks : mScriptHooks)
 			{
 				for (auto& hook : hooks.second)
@@ -321,7 +325,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 					{
 						auto oldFunc = hook.Function;
 
-						hook.Object->Release();
+						if (hook.Object->Release() <= 0)
+							released = true;
 
 						hook.Object = newObj;
 						hook.Function = newObj->GetObjectType()->GetMethodByName(oldFunc->GetName());
@@ -330,6 +335,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 					}
 				}
 			}
+
+			if (!released)
+				it->Release();
 		}
 
 		mEngine->GarbageCollect(asGC_FULL_CYCLE | asGC_DESTROY_GARBAGE);
@@ -366,7 +374,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 }
 bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type)
 {
-	auto len = stream.getSize();
+	auto len = size_t(stream.getSize());
 	std::vector<char> data(len);
 	stream.read(&data[0], len);
 
@@ -448,7 +456,30 @@ void ScriptManager::removeHookFromScript(const std::string& hook, const std::str
 	}
 
 	asIScriptObject* obj = (asIScriptObject*)ctx->GetThisPointer();
-	auto* funcptr = obj->GetObjectType()->GetMethodByName(func.c_str());
+	asIScriptFunction* funcptr = nullptr;
+	if (func.empty())
+	{
+		if (mScriptHooks.count(hook) > 0)
+		{
+			auto& hooks = mScriptHooks.at(hook);
+			std::find_if(hooks.begin(), hooks.end(), [&funcptr, obj](const ScriptHook& sh) {
+				if (sh.Object == obj)
+				{
+					funcptr = sh.Function;
+					return true;
+				}
+				return false;
+			});
+		}
+
+		if (!funcptr)
+		{
+			ctx->SetException("No such hook registered");
+			return;
+		}
+	}
+	else
+		funcptr = obj->GetObjectType()->GetMethodByName(func.c_str());
 
 	if (removeHook(hook, funcptr, obj))
 	{

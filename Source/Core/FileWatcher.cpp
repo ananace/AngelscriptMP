@@ -6,6 +6,8 @@
 #include <SFML/System/String.hpp>
 
 #include <windows.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <codecvt>
 #include <iostream>
@@ -208,7 +210,7 @@ namespace
 				{
 					pEntry = (FILE_NOTIFY_INFORMATION*)&watch.Buffer[i];
 					i += pEntry->NextEntryOffset;
-
+					
 					if (pEntry->FileNameLength > 0)
 					{
 						std::string path;
@@ -217,10 +219,10 @@ namespace
 						else
 							path = watch.Directory.substr(Path.size() + 1) + '\\';
 
-						std::string file = convert().to_bytes(pEntry->FileName, pEntry->FileName + pEntry->FileNameLength / sizeof(wchar_t));
+						std::string file = path + convert().to_bytes(pEntry->FileName, pEntry->FileName + pEntry->FileNameLength / sizeof(wchar_t));
 
-						if (std::find(list.begin(), list.end(), file) == list.end())
-							list.push_back(path + file);
+						if (!(GetFileAttributesA(file.c_str()) & FILE_ATTRIBUTE_DIRECTORY) && std::find(list.begin(), list.end(), file) == list.end())
+							list.push_back(file);
 					}
 
 					if (pEntry->NextEntryOffset == 0)
@@ -360,7 +362,8 @@ namespace
 
 						path += event->name;
 
-						list.push_back(path);
+						if (std::find(list.begin(), list.end(), path) == list.end())
+							list.push_back(path);
 					}
 
 					i += sizeof(inotify_event) + event->len;
