@@ -203,9 +203,10 @@ namespace
 				ResetEvent(watch.Overlapped.hEvent);
 
 				int i = 0;
+				FILE_NOTIFY_INFORMATION* pEntry;
 				do
 				{
-					FILE_NOTIFY_INFORMATION* pEntry = (FILE_NOTIFY_INFORMATION*)&watch.Buffer[i];
+					pEntry = (FILE_NOTIFY_INFORMATION*)&watch.Buffer[i];
 					i += pEntry->NextEntryOffset;
 
 					if (pEntry->FileNameLength > 0)
@@ -218,12 +219,25 @@ namespace
 
 						std::string file = convert().to_bytes(pEntry->FileName, pEntry->FileName + pEntry->FileNameLength / sizeof(wchar_t));
 
-						list.push_back(path + file);
+						if (std::find(list.begin(), list.end(), file) == list.end())
+							list.push_back(path + file);
 					}
-					
 
 					if (pEntry->NextEntryOffset == 0)
 					{
+						CancelIo(watch.Handle);
+
+						std::fill_n(watch.Buffer, sizeof(watch.Buffer), 0);
+						ReadDirectoryChangesW(watch.Handle,
+							&watch.Buffer,
+							sizeof(watch.Buffer),
+							mRecurse,
+							FILE_NOTIFY_CHANGE_LAST_WRITE,
+							NULL,
+							&watch.Overlapped,
+							NULL);
+
+						update(list);
 						break;
 					}
 				} while (true);
@@ -476,7 +490,12 @@ void FileWatcher::recurseDirectory(const std::string& dir, std::list<std::string
 		else
 		{
 			if (wildcmp(wildcard.c_str(), name.c_str()))
-				output.push_back(dir + '\\' + name);
+			{
+				if (dir == ".")
+					output.push_back(name);
+				else
+					output.push_back(dir + '\\' + name);
+			}
 		}
 
 		if (!FindNextFileA(findHandle, &find))
@@ -494,7 +513,12 @@ void FileWatcher::recurseDirectory(const std::string& dir, std::list<std::string
 		if (!(ent->d_type & (DT_DIR | DT_LNK)))
 		{
 			if (wildcmp(wildcard.c_str(), name.c_str()))
-				output.push_back(dir + '/' + name);
+			{
+				if (dir == ".")
+					output.push_back(name);
+				else
+					output.push_back(dir + '/' + name);
+			}
 			continue;
 		}
 

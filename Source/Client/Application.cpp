@@ -175,8 +175,7 @@ void Application::init()
 
 	man.addExtension("Array", [](asIScriptEngine* eng) { RegisterScriptArray(eng, true); });
 	man.registerSerializedType("array", []() {
-		static CArrayType ser;
-		return &ser;
+		return new CArrayType();
 	});
 	man.addExtension("Math", RegisterScriptMath);
 	man.addExtension("String", RegisterStdString);

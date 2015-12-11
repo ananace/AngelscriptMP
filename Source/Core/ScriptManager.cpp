@@ -236,6 +236,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 {
 	bool reload = mScripts.count(name) > 0;
 
+	std::list<asIScriptObject*> toPersist;
+	std::list<asIScriptObject*> toRehook;
 	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
@@ -244,7 +246,21 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		for (auto& reg : mSerializers)
 			serial.AddUserType(reg.second(), reg.first);
 
-		serial.Store(module);		
+		for (auto it = mPersistant.begin(); it != mPersistant.end();)
+		{
+			auto* obj = *it;
+
+			if (obj->GetObjectType()->GetModule() == module)
+			{
+				serial.AddExtraObjectToStore(obj);
+				toPersist.push_back(obj);
+				it = mPersistant.erase(it);
+			}
+			else
+				++it;
+		}
+
+		serial.Store(module);
 	}
 
 	BytecodeStore bcode;
@@ -285,10 +301,36 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		return false;
 
 
+	mScripts[name].Name = name;
+
 	auto* fun = module->GetFunctionByName("OnLoad");
 	if (reload)
 	{
 		serial.Restore(module);
+
+		for (auto& it : toPersist)
+		{
+			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it);
+			mPersistant.push_back(newObj);
+
+			for (auto& hooks : mScriptHooks)
+			{
+				for (auto& hook : hooks.second)
+				{
+					if (hook.Object == it)
+					{
+						auto oldFunc = hook.Function;
+
+						hook.Object->Release();
+
+						hook.Object = newObj;
+						hook.Function = newObj->GetObjectType()->GetMethodByName(oldFunc->GetName());
+
+						hook.Object->AddRef();
+					}
+				}
+			}
+		}
 
 		mEngine->GarbageCollect(asGC_FULL_CYCLE | asGC_DESTROY_GARBAGE);
 
@@ -393,6 +435,7 @@ void ScriptManager::addHookFromScript(const std::string& hook, const std::string
 		return;
 	}
 
+	addPersist(obj);
 	obj->AddRef();
 }
 void ScriptManager::removeHookFromScript(const std::string& hook, const std::string& func)
@@ -408,7 +451,25 @@ void ScriptManager::removeHookFromScript(const std::string& hook, const std::str
 	auto* funcptr = obj->GetObjectType()->GetMethodByName(func.c_str());
 
 	if (removeHook(hook, funcptr, obj))
-		obj->Release();
+	{
+		int i = obj->Release();
+
+		if (i <= 0)
+			removePersist(obj);
+	}
+}
+
+void ScriptManager::addPersist(asIScriptObject* obj)
+{
+	auto it = std::find(mPersistant.begin(), mPersistant.end(), obj);
+	if (it == mPersistant.end())
+		mPersistant.push_back(obj);
+}
+void ScriptManager::removePersist(asIScriptObject* obj)
+{
+	auto it = std::find(mPersistant.begin(), mPersistant.end(), obj);
+	if (it != mPersistant.end())
+		mPersistant.erase(it);
 }
 
 asIScriptEngine* ScriptManager::getEngine()
