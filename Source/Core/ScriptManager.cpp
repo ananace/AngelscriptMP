@@ -236,7 +236,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 {
 	bool reload = mScripts.count(name) > 0;
 
-	std::list<asIScriptObject*> toPersist;
+	std::list<std::pair<asIScriptObject*, bool>> toPersist;
 	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
@@ -252,7 +252,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 			if (obj->GetObjectType()->GetModule() == module)
 			{
 				serial.AddExtraObjectToStore(obj);
-				toPersist.push_back(obj);
+				toPersist.push_back({ obj, false });
 				obj->AddRef();
 
 				it = mPersistant.erase(it);
@@ -269,7 +269,6 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	{
 		static const char* scratchName = "!!ScratchSpace!!";
 
-		mEngine->DiscardModule(scratchName);
 		mBuilder.StartNewModule(mEngine, scratchName);
 
 		mBuilder.AddSectionFromMemory(name.c_str(), (const char*)data, len);
@@ -279,8 +278,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		{
 			for (auto& it : toPersist)
 			{
-				it->Release();
-				mPersistant.push_back(it);
+				it.first->Release();
+				mPersistant.push_back(it.first);
 			}
 
 #ifndef NDEBUG
@@ -294,6 +293,8 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 #else
 		mBuilder.GetModule()->SaveByteCode(&bcode, false);
 #endif
+
+		mEngine->DiscardModule(scratchName);
 	}
 	else
 	{
@@ -302,21 +303,25 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 	if (module)
 		module->Discard();
+
 	module = mEngine->GetModule(name.c_str(), asGM_ALWAYS_CREATE);
 	int r = module->LoadByteCode(&bcode);
 	if (r < 0)
 	{
 		for (auto& it : toPersist)
 		{
-			it->Release();
-			mPersistant.push_back(it);
+			it.first->Release();
+			mPersistant.push_back(it.first);
 		}
+
+		module->Discard();
 
 		return false;
 	}
 
 
-	mScripts[name].Name = name;
+	if (mScripts.count(name) == 0)
+		mScripts[name].Name = name;
 
 	auto* fun = module->GetFunctionByName("OnLoad");
 	if (reload)
@@ -325,21 +330,19 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 
 		for (auto& it : toPersist)
 		{
-			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it);
+			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it.first);
 			mPersistant.push_back(newObj);
-
-			bool released = false;
 
 			for (auto& hooks : mScriptHooks)
 			{
 				for (auto& hook : hooks.second)
 				{
-					if (hook.Object == it)
+					if (hook.Object == it.first)
 					{
 						auto oldFunc = hook.Function;
 
-						if (hook.Object->Release() <= 0)
-							released = true;
+						if (!it.second && hook.Object->Release() <= 0)
+							it.second = true;
 
 						hook.Object = newObj;
 						hook.Function = newObj->GetObjectType()->GetMethodByName(oldFunc->GetName());
@@ -349,13 +352,13 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 				}
 			}
 
-			if (!released)
-				it->Release();
+			if (!it.second && it.first->Release() <= 0)
+				it.second = true;
 		}
 
-		mEngine->GarbageCollect(asGC_FULL_CYCLE | asGC_DESTROY_GARBAGE);
+		mEngine->GarbageCollect(asGC_FULL_CYCLE);
 
-		auto* fun = module->GetFunctionByName("OnReload");
+		fun = module->GetFunctionByName("OnReload");
 		if (fun)
 		{
 			auto* ctx = mEngine->RequestContext();
@@ -497,7 +500,6 @@ void ScriptManager::removeHookFromScript(const std::string& hook, const std::str
 	if (removeHook(hook, funcptr, obj))
 	{
 		int i = obj->Release();
-
 		if (i <= 0)
 			removePersist(obj);
 	}

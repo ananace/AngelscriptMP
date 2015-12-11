@@ -246,14 +246,16 @@ void Application::run()
 
 	const Timespan tickLength = std::chrono::milliseconds(15);
 	Timespan tickTime(0);
+	Timestamp now = Clock::now(), nextGC = now + std::chrono::seconds(2);
 
-	auto framepoint = Clock::now();
+	auto oldframe = now;
 
 	while (window.isOpen())
 	{
-		auto point = Clock::now();
-		Timespan dt = point - framepoint;
-		framepoint = point;
+		now = Clock::now();
+		Timespan dt = now - oldframe;
+		oldframe = now;
+
 		tickTime += dt;
 
 		if (watch.pollChange(modified))
@@ -349,6 +351,13 @@ void Application::run()
 		man.runHook<sf::RenderTarget*>("DrawUI", &window);
 
 		window.display();
+
+		if (now > nextGC)
+		{
+			man.getEngine()->GarbageCollect(asGC_ONE_STEP);
+
+			nextGC = now + std::chrono::seconds(2);
+		}
 	}
 }
 
