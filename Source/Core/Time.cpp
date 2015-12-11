@@ -80,8 +80,13 @@ std::ostream& operator<<(std::ostream& os, const Timespan& dur)
 		os << duration_cast<microseconds>(dur).count() << "us";
 	else if (dur <= std::chrono::seconds(1))
 		os << duration_cast<milliseconds>(dur).count() << "ms";
-	else
+	else if (dur <= std::chrono::seconds(60))
 		os << duration_cast<seconds>(dur).count() << "s";
+	else if (dur <= std::chrono::seconds(3600))
+		os << duration_cast<seconds>(dur).count() / 60 << "m";
+	else
+		os << duration_cast<seconds>(dur).count() / 3600 << "h";
+		
 	os.precision(prev);
 	os.setf(prevf);
 
@@ -107,13 +112,19 @@ namespace
 		mem->~duration();
 	}
 
-	Timespan opSub(const Timestamp& a, const Timestamp& b)
+	void opSub(asIScriptGeneric* gen)
 	{
-		return a - b;
+		const Timestamp* a = (const Timestamp*)gen->GetObject();
+		const Timestamp* b = (const Timestamp*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) Timespan(*a - *b);
 	}
-	Timestamp opAdd(const Timestamp& a, const Timespan& b)
+	void opAdd(asIScriptGeneric* gen)
 	{
-		return a + b;
+		const Timestamp* a = (const Timestamp*)gen->GetObject();
+		const Timespan* b = (const Timespan*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) Timestamp(*a + *b);
 	}
 
 	std::string toStringStamp(const Timestamp& s)
@@ -164,6 +175,25 @@ namespace
 			return 1;
 		return 0;
 	}
+
+	void getTimeAt(asIScriptGeneric* gen)
+	{
+		std::tm t;
+		
+		t.tm_hour = gen->GetArgDWord(3);
+		t.tm_min = gen->GetArgDWord(4);
+		t.tm_sec = gen->GetArgDWord(5);
+		t.tm_mday = gen->GetArgDWord(2);
+		t.tm_mon = gen->GetArgDWord(1) - 1;
+		t.tm_year = gen->GetArgDWord(0) - 1900;
+
+		auto time = std::mktime(&t);
+
+		Timestamp point = start + (std::chrono::system_clock::from_time_t(time) - sys_start);
+		std::cout << point << std::endl;
+
+		new (gen->GetAddressOfReturnLocation()) Timestamp(point);
+	}
 }
 
 void Time::registerTimeTypes(ScriptManager& man)
@@ -177,8 +207,8 @@ void Time::registerTimeTypes(ScriptManager& man)
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timestamp& opAssign(const Timestamp&in)", asMETHODPR(Timestamp, operator=, (const Timestamp&), Timestamp&), asCALL_THISCALL));
 
-		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timestamp opAdd(const Timespan&in) const", asFUNCTIONPR(opAdd, (const Timestamp&, const Timespan&), Timestamp), asCALL_CDECL_OBJFIRST));
-		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timespan opSub(const Timestamp&in) const", asFUNCTIONPR(opSub, (const Timestamp&, const Timestamp&), Timespan), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timestamp opAdd(const Timespan&in) const", asFUNCTION(opAdd), asCALL_GENERIC));
+		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timespan opSub(const Timestamp&in) const", asFUNCTION(opSub), asCALL_GENERIC));
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "int opCmp(const Timestamp&in) const", asFUNCTION(opCmp), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "string opConv() const", asFUNCTION(toStringStamp), asCALL_CDECL_OBJFIRST));
@@ -202,6 +232,7 @@ void Time::registerTimeTypes(ScriptManager& man)
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(Clock::now), asCALL_CDECL));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(Time::getRunTime), asCALL_CDECL));
 
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp At(uint year, uint mon, uint day, uint h = 0, uint m = 0, uint s = 0)", asFUNCTION(getTimeAt), asCALL_GENERIC));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Nanoseconds(int64)", asFUNCTION(fromNanoseconds), asCALL_GENERIC));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Milliseconds(int64)", asFUNCTION(fromMilliseconds), asCALL_GENERIC));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Seconds(float)", asFUNCTION(fromSeconds), asCALL_GENERIC));
