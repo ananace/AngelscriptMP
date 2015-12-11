@@ -161,6 +161,15 @@ void ScriptManager::registerSerializedType(const std::string& name, const std::f
 
 void ScriptManager::init()
 {
+	addExtension("ScriptHooks", [this](asIScriptEngine* eng) {
+		eng->SetDefaultNamespace("Hooks");
+
+		eng->RegisterGlobalFunction("void Add(const string&in, const string&in)", asMETHOD(ScriptManager, addHookFromScript), asCALL_THISCALL_ASGLOBAL, this);
+		eng->RegisterGlobalFunction("void Remove(const string&in, const string&in)", asMETHOD(ScriptManager, addHookFromScript), asCALL_THISCALL_ASGLOBAL, this);
+
+		eng->SetDefaultNamespace("");
+	});
+
 	asIScriptEngine* eng = asCreateScriptEngine(ANGELSCRIPT_VERSION);
 	eng->SetMessageCallback(asFUNCTION(error), nullptr, asCALL_CDECL);
 
@@ -235,7 +244,7 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		for (auto& reg : mSerializers)
 			serial.AddUserType(reg.second(), reg.first);
 
-		serial.Store(module);
+		serial.Store(module);		
 	}
 
 	BytecodeStore bcode;
@@ -320,6 +329,85 @@ bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& str
 	return loadFromMemory(name, &data[0], len, type);
 }
 
+void ScriptManager::registerHook(const std::string& name, const std::string& decl)
+{
+	mRegisteredHooks.emplace(name, decl);
+}
+bool ScriptManager::addHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj)
+{
+	if (mRegisteredHooks.count(hook) == 0)
+		return false;
+
+	auto& data = mRegisteredHooks.at(hook);
+	std::string decl = func->GetDeclaration(false);
+	std::string name = func->GetName();
+	auto off = decl.find(name);
+	decl.replace(off, name.length(), "f");
+
+	if (decl != data)
+		return false;
+
+	auto& hooks = mScriptHooks[hook];
+	auto it = std::find_if(hooks.begin(), hooks.end(), [obj, func](ScriptHook& hook) { return hook.Function == func && hook.Object == obj; });
+	if (it == hooks.end())
+		hooks.push_back({ func, obj });
+
+	return true;
+}
+bool ScriptManager::removeHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj)
+{
+	if (mRegisteredHooks.count(hook) == 0 || mScriptHooks.count(hook) == 0)
+		return false;
+
+	auto& hooks = mScriptHooks.at(hook);
+	auto it = std::remove_if(hooks.begin(), hooks.end(), [obj, func](ScriptHook& hook) { return hook.Function == func && hook.Object == obj; });
+
+	if (it != hooks.end())
+	{
+		hooks.erase(it, hooks.end());
+		return true;
+	}
+
+	return false;
+}
+
+void ScriptManager::addHookFromScript(const std::string& hook, const std::string& func)
+{
+	auto* ctx = asGetActiveContext();
+	if (mRegisteredHooks.count(hook) == 0)
+	{
+		ctx->SetException("No such hook");
+		return;
+	}
+
+	asIScriptObject* obj = (asIScriptObject*)ctx->GetThisPointer();
+	auto* funcptr = obj->GetObjectType()->GetMethodByName(func.c_str());
+
+	if (!addHook(hook, funcptr, obj))
+	{
+		ctx->SetException(("Invalid declaration for hook '" + hook + "'\n" +
+			"Expects " + mRegisteredHooks.at(hook)).c_str());
+
+		return;
+	}
+
+	obj->AddRef();
+}
+void ScriptManager::removeHookFromScript(const std::string& hook, const std::string& func)
+{
+	auto* ctx = asGetActiveContext();
+	if (mRegisteredHooks.count(hook) == 0)
+	{
+		ctx->SetException("No such hook");
+		return;
+	}
+
+	asIScriptObject* obj = (asIScriptObject*)ctx->GetThisPointer();
+	auto* funcptr = obj->GetObjectType()->GetMethodByName(func.c_str());
+
+	if (removeHook(hook, funcptr, obj))
+		obj->Release();
+}
 
 asIScriptEngine* ScriptManager::getEngine()
 {

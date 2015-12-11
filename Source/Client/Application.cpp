@@ -196,7 +196,13 @@ void Application::init()
 	as::SFML::registerTypes(man);
 
 	man.init();
+
 	man.getEngine()->SetUserData(&mEngine.get<sf::RenderWindow>(), 0x6AE1);
+
+	man.registerHook("Tick",   "void f(const Timespan&in)");
+	man.registerHook("Update", "void f(const Timespan&in)");
+	man.registerHook("Draw",   "void f(sf::Renderer@)");
+	man.registerHook("DrawUI", "void f(sf::Renderer@)");
 
 	// Load scripts;
 	std::list<std::string> files;
@@ -239,7 +245,7 @@ void Application::run()
 	}
 
 	const Timespan tickLength = std::chrono::milliseconds(15);
-	Timespan tickTime;
+	Timespan tickTime(0);
 
 	auto framepoint = Clock::now();
 
@@ -301,7 +307,7 @@ void Application::run()
 				{
 					bool pressed = ev.type == sf::Event::MouseButtonPressed;
 
-					sf::Vector2f pos{ ev.mouseButton.x, ev.mouseButton.y };
+					sf::Vector2f pos{ float(ev.mouseButton.x), float(ev.mouseButton.y) };
 					man.runHook<const sf::Vector2f&, sf::Mouse::Button, bool>("Mouse.Button", pos, ev.mouseButton.button, pressed);
 				}
 				else if (ev.type == sf::Event::MouseMoved)

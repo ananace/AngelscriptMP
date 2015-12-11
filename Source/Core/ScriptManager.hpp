@@ -66,8 +66,12 @@ public:
 
 	void init();
 
+	void registerHook(const std::string& name, const std::string& decl);
 	template<typename... Args>
 	void runHook(const std::string& name, Args... args);
+
+	bool addHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
+	bool removeHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
 
 	asIScriptEngine* getEngine();
 
@@ -83,11 +87,15 @@ private:
 		asIScriptObject* Object;
 	};
 
+	void addHookFromScript(const std::string& hook, const std::string& func);
+	void removeHookFromScript(const std::string& hook, const std::string& func);
+	
 	std::list<asIScriptObject*> mObjects;
 	std::list<std::pair<std::string, ScriptExtensionFun>> mExtensions;
 	std::unordered_map<std::string, Script> mScripts;
 	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;
-	std::unordered_map<std::string, ScriptHook> mRegisteredHooks;
+	std::unordered_map<std::string, std::string> mRegisteredHooks;
+	std::unordered_map<std::string, std::list<ScriptHook>> mScriptHooks;
 	asIScriptEngine* mEngine;
 	CScriptBuilder mBuilder;
 };

@@ -75,18 +75,18 @@ namespace
 template<typename... Args>
 void ScriptManager::runHook(const std::string& name, Args... args)
 {
-	if (mRegisteredHooks.count(name) == 0)
+	if (mRegisteredHooks.count(name) == 0 || mScriptHooks.count(name) == 0)
 		return;
 
 	auto* ctx = mEngine->RequestContext();
 
-	for (auto& hook : mRegisteredHooks)
+	for (auto& hook : mScriptHooks.at(name))
 	{
 		int r = 0;
-		r = ctx->Prepare(hook.second.Function);
+		r = ctx->Prepare(hook.Function);
 		if (r < 0)
 			continue;
-		r = ctx->SetObject(hook.second.Object);
+		r = ctx->SetObject(hook.Object);
 		if (r < 0)
 			continue;
 

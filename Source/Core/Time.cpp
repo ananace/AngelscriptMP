@@ -111,6 +111,10 @@ namespace
 	{
 		return a - b;
 	}
+	Timestamp opAdd(const Timestamp& a, const Timespan& b)
+	{
+		return a + b;
+	}
 
 	std::string toStringStamp(const Timestamp& s)
 	{
@@ -128,6 +132,38 @@ namespace
 	int64_t nanoseconds(const Timespan& s) { return std::chrono::duration_cast<std::chrono::nanoseconds>(s).count(); }
 	int64_t milliseconds(const Timespan& s) { return std::chrono::duration_cast<std::chrono::milliseconds>(s).count(); }
 	float seconds(const Timespan& s) { return std::chrono::duration_cast<std::chrono::duration<float>>(s).count(); }
+	void fromNanoseconds(asIScriptGeneric* gen)
+	{
+		int64_t ns = gen->GetArgQWord(0);
+		new (gen->GetAddressOfReturnLocation()) Timespan(std::chrono::nanoseconds(ns));
+	}
+	void fromMilliseconds(asIScriptGeneric* gen)
+	{
+		int64_t ms = gen->GetArgQWord(0);
+		new (gen->GetAddressOfReturnLocation()) Timespan(std::chrono::milliseconds(ms));
+	}
+	void fromSeconds(asIScriptGeneric* gen)
+	{
+		float s = gen->GetArgFloat(0);
+		new (gen->GetAddressOfReturnLocation()) Timespan(std::chrono::duration_cast<Timespan>(std::chrono::duration<float>(s)));
+	}
+
+	int opCmp(const Timestamp& a, const Timestamp& b)
+	{
+		if (a < b)
+			return -1;
+		else if (a > b)
+			return 1;
+		return 0;
+	}
+	int opCmpSpan(const Timespan& a, const Timespan& b)
+	{
+		if (a < b)
+			return -1;
+		else if (a > b)
+			return 1;
+		return 0;
+	}
 }
 
 void Time::registerTimeTypes(ScriptManager& man)
@@ -141,7 +177,10 @@ void Time::registerTimeTypes(ScriptManager& man)
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timestamp& opAssign(const Timestamp&in)", asMETHODPR(Timestamp, operator=, (const Timestamp&), Timestamp&), asCALL_THISCALL));
 
+		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timestamp opAdd(const Timespan&in) const", asFUNCTIONPR(opAdd, (const Timestamp&, const Timespan&), Timestamp), asCALL_CDECL_OBJFIRST));
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "Timespan opSub(const Timestamp&in) const", asFUNCTIONPR(opSub, (const Timestamp&, const Timestamp&), Timespan), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "int opCmp(const Timestamp&in) const", asFUNCTION(opCmp), asCALL_CDECL_OBJFIRST));
+
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "string opConv() const", asFUNCTION(toStringStamp), asCALL_CDECL_OBJFIRST));
 		AS_ASSERT(eng->RegisterObjectMethod("Timestamp", "string ToString() const", asFUNCTION(toStringStamp), asCALL_CDECL_OBJFIRST));
 
@@ -149,6 +188,7 @@ void Time::registerTimeTypes(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectBehaviour("Timespan", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyTimespan), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "Timespan& opAssign(const Timespan&in)", asMETHODPR(Timespan, operator=, (const Timespan&), Timespan&), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int opCmp(const Timespan&in) const", asFUNCTION(opCmpSpan), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Count() const", asMETHOD(Timespan, count), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "int64 get_Nanoseconds() const", asFUNCTION(nanoseconds), asCALL_CDECL_OBJFIRST));
@@ -161,6 +201,10 @@ void Time::registerTimeTypes(ScriptManager& man)
 		AS_ASSERT(eng->SetDefaultNamespace("Time"));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(Clock::now), asCALL_CDECL));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(Time::getRunTime), asCALL_CDECL));
+
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Nanoseconds(int64)", asFUNCTION(fromNanoseconds), asCALL_GENERIC));
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Milliseconds(int64)", asFUNCTION(fromMilliseconds), asCALL_GENERIC));
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Seconds(float)", asFUNCTION(fromSeconds), asCALL_GENERIC));
 		AS_ASSERT(eng->SetDefaultNamespace(""));
 	});
 
