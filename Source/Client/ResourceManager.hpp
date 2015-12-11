@@ -12,6 +12,7 @@ namespace sf
 	class Texture;
 }
 
+class ScriptManager;
 class ResourceManager
 {
 public:
@@ -19,6 +20,7 @@ public:
 	class res_ptr
 	{
 	public:
+		res_ptr();
 		res_ptr(const res_ptr& ptr);
 		res_ptr(res_ptr&& ptr);
 		~res_ptr();
@@ -37,7 +39,7 @@ public:
 	private:
 		res_ptr(ResourceManager& man, T* data);
 
-		ResourceManager& mManager;
+		ResourceManager* mManager;
 		T* mData;
 
 		friend class ResourceManager;
@@ -50,10 +52,12 @@ public:
 	ResourceManager& operator=(const ResourceManager&) = delete;
 
 	template<typename T>
-	res_ptr<T>&& get(const std::string& name);
-	
+	res_ptr<T> get(const std::string& name);
+
 	void addref(void* data);
 	void release(void* data);
+
+	void registerScript(ScriptManager& man);
 
 	typedef res_ptr<sf::Music> Music;
 	typedef res_ptr<sf::SoundBuffer> Sound;

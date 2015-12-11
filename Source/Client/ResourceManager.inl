@@ -1,8 +1,15 @@
 #pragma once
 
 template<typename T>
+ResourceManager::res_ptr<T>::res_ptr() :
+	mManager(nullptr), mData(nullptr)
+{
+
+}
+
+template<typename T>
 ResourceManager::res_ptr<T>::res_ptr(ResourceManager& man, T* data) :
-	mManager(man), mData(data)
+	mManager(&man), mData(data)
 {
 	
 }
@@ -10,20 +17,21 @@ template<typename T>
 ResourceManager::res_ptr<T>::res_ptr(const res_ptr& ptr) :
 	mManager(ptr.mManager), mData(ptr.mData)
 {
-	mManager.addref(mData);
+	mManager->addref(mData);
 }
 template<typename T>
 ResourceManager::res_ptr<T>::res_ptr(res_ptr&& ptr) : 
 	mManager(std::move(ptr.mManager)), mData(std::move(ptr.mData))
 {
+	ptr.mManager = nullptr;
 	ptr.mData = nullptr;
 }
 
 template<typename T>
 ResourceManager::res_ptr<T>::~res_ptr()
 {
-	if (mData)
-		mManager.release(mData);
+	if (mData && mManager)
+		mManager->release(mData);
 }
 
 template<typename T>
@@ -33,12 +41,12 @@ ResourceManager::res_ptr<T>& ResourceManager::res_ptr<T>::operator=(const res_pt
 		return *this;
 
 	if (mData)
-		mManager.release(mData);
+		mManager->release(mData);
 	
 	mManager = ptr.mManager;
 	mData = ptr.mData;
 
-	mManager.addref(mData);
+	mManager->addref(mData);
 
 	return *this;
 }
@@ -81,7 +89,7 @@ inline const T* ResourceManager::res_ptr<T>::operator->() const
 }
 
 template<typename T>
-ResourceManager::res_ptr<T>&& ResourceManager::get(const std::string& name)
+ResourceManager::res_ptr<T> ResourceManager::get(const std::string& name)
 {
 	if (mResources.count(name) == 0)
 	{
@@ -93,12 +101,15 @@ ResourceManager::res_ptr<T>&& ResourceManager::get(const std::string& name)
 			throw new std::runtime_error("Failed to load " + name);
 		}
 
-		mResources[name] = { 0, [](void* mem) { delete (T*)mem; }, resource };
+		auto& res = mResources[name];
+		res.Counter = 0;
+		res.Destructor = [](void* mem) { delete (T*)mem; };
+		res.Memory = resource;
 	}
 
 	auto& res = mResources.at(name);
 	res_ptr<T> ptr(*this, reinterpret_cast<T*>(res.Memory));
 	++res.Counter;
 
-	return std::move(ptr);
+	return ptr;
 }

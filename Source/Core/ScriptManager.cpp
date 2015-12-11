@@ -237,7 +237,6 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	bool reload = mScripts.count(name) > 0;
 
 	std::list<asIScriptObject*> toPersist;
-	std::list<asIScriptObject*> toRehook;
 	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
@@ -278,6 +277,12 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		int r = mBuilder.BuildModule();
 		if (r < 0)
 		{
+			for (auto& it : toPersist)
+			{
+				it->Release();
+				mPersistant.push_back(it);
+			}
+
 #ifndef NDEBUG
 			puts(ASException::GetMessage(r));
 #endif
@@ -300,7 +305,15 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	module = mEngine->GetModule(name.c_str(), asGM_ALWAYS_CREATE);
 	int r = module->LoadByteCode(&bcode);
 	if (r < 0)
+	{
+		for (auto& it : toPersist)
+		{
+			it->Release();
+			mPersistant.push_back(it);
+		}
+
 		return false;
+	}
 
 
 	mScripts[name].Name = name;

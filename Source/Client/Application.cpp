@@ -193,6 +193,7 @@ void Application::init()
 	});
 	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
+	mEngine.get<ResourceManager>().registerScript(man);
 
 	man.init();
 

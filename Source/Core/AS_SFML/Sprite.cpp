@@ -20,6 +20,11 @@ namespace
 		mem->~T();
 	}
 
+
+	void setSpriteTexture(sf::Sprite& s, const sf::Texture& t)
+	{
+		s.setTexture(t);
+	}
 	void getSpriteTextureRect(asIScriptGeneric* gen)
 	{
 		const sf::Sprite* s = (const sf::Sprite*)gen->GetObject();
@@ -47,7 +52,7 @@ void as::priv::RegSprite(asIScriptEngine* eng)
 
 	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "void set_Color(const Color&in)", asMETHOD(sf::Sprite, setColor), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "const Color& get_Color() const", asMETHOD(sf::Sprite, getColor), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "void set_Texture(const Texture@)", asMETHOD(sf::Sprite, setTexture), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "void SetTexture(const Texture@)", asFUNCTION(setSpriteTexture), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "const Texture@ get_Texture() const", asMETHOD(sf::Sprite, getTexture), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "void set_TextureRect(const Rect&in)", asFUNCTION(setSpriteTextureRect), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Sprite", "Rect get_TextureRect() const", asFUNCTION(getSpriteTextureRect), asCALL_GENERIC));
