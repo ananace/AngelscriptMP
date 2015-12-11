@@ -33,6 +33,8 @@ private:
 #define AS_ASSERT(f) f
 #endif
 
+namespace sf { class InputStream; }
+
 class ScriptManager
 {
 public:

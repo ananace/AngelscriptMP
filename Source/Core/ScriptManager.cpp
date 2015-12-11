@@ -260,7 +260,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		int r = mBuilder.BuildModule();
 		if (r < 0)
 		{
+#ifndef NDEBUG
 			puts(ASException::GetMessage(r));
+#endif
 			return false;
 		}
 
