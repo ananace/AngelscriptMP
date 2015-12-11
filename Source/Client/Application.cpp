@@ -195,9 +195,8 @@ void Application::init()
 	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
 
-	// TODO: Register application classes for scripts
-	
 	man.init();
+	man.getEngine()->SetUserData(&mEngine.get<sf::RenderWindow>(), 0x6AE1);
 
 	// Load scripts;
 	std::list<std::string> files;
