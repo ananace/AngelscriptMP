@@ -226,6 +226,7 @@ void Application::run()
 	std::string modified;
 	auto& window = mEngine.get<sf::RenderWindow>();
 	auto& watch = mEngine.get<FileWatcher>();
+	auto& man = mEngine.get<ScriptManager>();
 
 	window.create({ 800, 600 }, "AngelscriptMP Client");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
@@ -260,6 +261,9 @@ void Application::run()
 		}
 
 
+		// -------------
+		// Handle Events
+
 		if (window.pollEvent(ev))
 		{
 			if (ev.type == sf::Event::Closed)
@@ -279,37 +283,64 @@ void Application::run()
 				{
 					bool pressed = ev.type == sf::Event::KeyPressed;
 					
-					// man.runHook<void, bool>("Key."
+					man.runHook<sf::Keyboard::Key, bool>("Keyboard.Key", ev.key.code, pressed);
+				}
+				else if(ev.type == sf::Event::JoystickButtonPressed ||
+					ev.type == sf::Event::JoystickButtonReleased)
+				{
+					bool pressed = ev.type == sf::Event::JoystickButtonPressed;
+
+					man.runHook<uint32_t, uint32_t, bool>("Joystick.Button", ev.joystickButton.joystickId, ev.joystickButton.button, pressed);
+				}
+				else if (ev.type == sf::Event::JoystickMoved)
+				{
+					man.runHook<uint32_t, sf::Joystick::Axis, float>("Joystick.Moved", ev.joystickMove.joystickId, ev.joystickMove.axis, ev.joystickMove.position);
+				}
+				else if (ev.type == sf::Event::MouseButtonPressed ||
+					ev.type == sf::Event::MouseButtonReleased)
+				{
+					bool pressed = ev.type == sf::Event::MouseButtonPressed;
+
+					sf::Vector2f pos{ ev.mouseButton.x, ev.mouseButton.y };
+					man.runHook<const sf::Vector2f&, sf::Mouse::Button, bool>("Mouse.Button", pos, ev.mouseButton.button, pressed);
+				}
+				else if (ev.type == sf::Event::MouseMoved)
+				{
+					sf::Vector2f pos(sf::Mouse::getPosition(window));
+					man.runHook<const sf::Vector2f&>("Mouse.Moved", pos);
 				}
 			}
-
-			// TODO: Pass events
-			// FIXME: How?
 		}
+
+
+		// -----------
+		// Run updates
 
 		while (tickTime >= tickLength)
 		{
 			// Run fixed updates
-			// man.runHook<void, const Timespan&>("Tick", tickLength);
+			man.runHook<const Timespan&>("Tick", tickLength);
 
 			tickTime -= tickLength;
 		}
 
 		// Run per-frame updates
-		// man.runHook<void, const Timespan&>("Update", dt);
+		man.runHook<const Timespan&>("Update", dt);
+
+
+		// ----------------
+		// Draw the results
 
 		window.clear();
 
+		// Draw things
 		window.setView(gameView);
-
-		// Draw things
-		// man.runHook<void, sf::RenderTarget*>("Draw", &window);
-
+		man.runHook<sf::RenderTarget*>("Draw", &window);
 		gameView = window.getView();
-		window.setView(uiView);
 
-		// Draw things
-		// man.runHook<void, sf::RenderTarget*>("DrawUI", &window);
+		// Draw UI things
+		window.setView(uiView);
+		man.runHook<sf::RenderTarget*>("DrawUI", &window);
 
 		window.display();
 	}

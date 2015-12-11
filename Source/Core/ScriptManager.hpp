@@ -66,6 +66,9 @@ public:
 
 	void init();
 
+	template<typename... Args>
+	void runHook(const std::string& name, Args... args);
+
 	asIScriptEngine* getEngine();
 
 private:
@@ -74,11 +77,17 @@ private:
 		std::string Name;
 		bool DirectLoad;
 	};
+	struct ScriptHook
+	{
+		asIScriptFunction* Function;
+		asIScriptObject* Object;
+	};
 
 	std::list<asIScriptObject*> mObjects;
 	std::list<std::pair<std::string, ScriptExtensionFun>> mExtensions;
 	std::unordered_map<std::string, Script> mScripts;
 	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;
+	std::unordered_map<std::string, ScriptHook> mRegisteredHooks;
 	asIScriptEngine* mEngine;
 	CScriptBuilder mBuilder;
 };
