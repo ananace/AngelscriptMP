@@ -14,6 +14,7 @@ namespace priv
 extern void RegVec2(asIScriptEngine*);
 extern void RegVec3(asIScriptEngine*);
 extern void RegRect(asIScriptEngine*);
+extern void RegView(asIScriptEngine*);
 extern void RegRenderer(asIScriptEngine*);
 extern void RegColor(asIScriptEngine*);
 extern void RegTexture(asIScriptEngine*);
@@ -41,7 +42,7 @@ struct SFMLType
 
 // Type store
 //============
-static const size_t TypeCount = 18;
+static const size_t TypeCount = 19;
 extern const SFMLType Types[TypeCount];
 
 // Helper functions

@@ -11,6 +11,7 @@ const SFMLType as::priv::Types[TypeCount] = {
 	{ "Vec2", RegVec2, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Vector2f>(); } },
 	{ "Vec3", RegVec3, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Vector3f>(); } },
 	{ "Rect", RegRect, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::FloatRect>(); } },
+	{ "View", RegView, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::View>(); } },
 	{ "Renderer", RegRenderer, nullptr },
 	{ "Color", RegColor, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Color>(); } },
 	{ "Texture", RegTexture, nullptr },

@@ -36,6 +36,8 @@ void as::priv::RegRenderer(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Renderer", "void set_Center(const Vec2&in)", asFUNCTION(setCenter), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Renderer", "const Vec2& get_Size() const", asFUNCTION(getSize), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Renderer", "void set_Size(const Vec2&in)", asFUNCTION(setSize), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Renderer", "const View& get_View() const", asMETHOD(sf::RenderTarget, getView), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Renderer", "void set_View(const View&in)", asMETHOD(sf::RenderTarget, setView), asCALL_THISCALL));
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
 }

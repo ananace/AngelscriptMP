@@ -50,6 +50,7 @@ SET(SOURCES
 	AS_SFML/Texture.cpp
 	AS_SFML/Vector2.cpp
 	AS_SFML/Vector3.cpp
+	AS_SFML/View.cpp
 )
 
 SOURCE_GROUP("Header files\\AS_Addons" REGULAR_EXPRESSION "AS_Addons/[^.]+.h")
