@@ -26,12 +26,39 @@ namespace
 
 		new (gen->GetAddressOfReturnLocation()) sf::FloatRect(obj->getGlobalBounds());
 	}
+
+	template<typename T>
+	void getShapePoint(asIScriptGeneric* gen)
+	{
+		T* obj = (T*)gen->GetObject();
+		unsigned int id = gen->GetArgDWord(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(obj->getPoint(id));
+	}
+
+	template<typename T>
+	void getSoundPosition(asIScriptGeneric* gen)
+	{
+		T* obj = (T*)gen->GetObject();
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(obj->getPosition());
+	}
 }
 
 template<typename T>
-void draw(sf::RenderTarget& target, const T& toDraw)
+void draw(sf::RenderTarget& target, const T& toDraw, bool applyStates)
 {
-	target.draw(toDraw);
+	if (applyStates)
+	{
+		auto* ctx = asGetActiveContext();
+		sf::RenderStates* states = (sf::RenderStates*)ctx->GetUserData(0x5747);
+
+		if (states)
+			target.draw(toDraw, *states);
+		else
+			target.draw(toDraw);
+	}
+	else
+		target.draw(toDraw);
 }
 
 template<typename T>
@@ -40,7 +67,7 @@ void RegisterDrawable(asIScriptEngine* eng, const char* name)
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_LocalBounds() const", asFUNCTION(getLocalBounds<T>), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod(name, "Rect get_GlobalBounds() const", asFUNCTION(getGlobalBounds<T>), asCALL_GENERIC));
 
-	AS_ASSERT(eng->RegisterObjectMethod("Renderer", ("void Draw(const " + std::string(name) + "&in)").c_str(), asFUNCTIONPR(draw, (sf::RenderTarget&, const T&), void), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Renderer", ("void Draw(const " + std::string(name) + "&in,bool=true)").c_str(), asFUNCTIONPR(draw, (sf::RenderTarget&, const T&, bool), void), asCALL_CDECL_OBJFIRST));
 }
 template<typename T>
 void RegisterTransformable(asIScriptEngine* eng, const char* name)
@@ -69,7 +96,7 @@ void RegisterShape(asIScriptEngine* eng, const char* name)
 	AS_ASSERT(eng->RegisterObjectMethod(name, "void set_OutlineThickness(float)", asMETHOD(T, setOutlineThickness), asCALL_THISCALL));
 	
 	AS_ASSERT(eng->RegisterObjectMethod(name, "uint get_PointCount() const", asMETHOD(T, getPointCount), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod(name, "Vec2 get_opIndex(uint) const", asMETHOD(T, getPoint), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod(name, "Vec2 get_opIndex(uint) const", asFUNCTION(getShapePoint<T>), asCALL_GENERIC));
 }
 
 template<typename T>
@@ -92,7 +119,7 @@ void RegisterSoundSource(asIScriptEngine* eng, const char* name)
 	AS_ASSERT(eng->RegisterObjectMethod(name, "void set_Attenuation(float)", asMETHOD(T, setAttenuation), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod(name, "float get_MinDistance() const", asMETHOD(T, getMinDistance), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod(name, "void set_MinDistance(float)", asMETHOD(T, setMinDistance), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod(name, "Vec3 get_Position() const", asMETHOD(T, getPosition), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod(name, "Vec3 get_Position() const", asFUNCTION(getSoundPosition<T>), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod(name, "void set_Position(const Vec3&in)", asMETHODPR(T, setPosition, (const sf::Vector3f&), void), asCALL_THISCALL));
 }
 

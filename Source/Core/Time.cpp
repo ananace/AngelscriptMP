@@ -194,6 +194,15 @@ namespace
 
 		new (gen->GetAddressOfReturnLocation()) Timestamp(point);
 	}
+
+	void getNow(asIScriptGeneric* gen)
+	{
+		new (gen->GetAddressOfReturnLocation()) Timestamp(Clock::now());
+	}
+	void getTotal(asIScriptGeneric* gen)
+	{
+		new (gen->GetAddressOfReturnLocation()) Timespan(Clock::now() - start);
+	}
 }
 
 void Time::registerTimeTypes(ScriptManager& man)
@@ -229,8 +238,8 @@ void Time::registerTimeTypes(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("Timespan", "string ToString() const", asFUNCTION(toStringSpan), asCALL_CDECL_OBJFIRST));
 
 		AS_ASSERT(eng->SetDefaultNamespace("Time"));
-		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(Clock::now), asCALL_CDECL));
-		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(Time::getRunTime), asCALL_CDECL));
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp get_Now()", asFUNCTION(getNow), asCALL_GENERIC));
+		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan get_Total()", asFUNCTION(getTotal), asCALL_GENERIC));
 
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timestamp At(uint year, uint mon, uint day, uint h = 0, uint m = 0, uint s = 0)", asFUNCTION(getTimeAt), asCALL_GENERIC));
 		AS_ASSERT(eng->RegisterGlobalFunction("::Timespan Nanoseconds(int64)", asFUNCTION(fromNanoseconds), asCALL_GENERIC));

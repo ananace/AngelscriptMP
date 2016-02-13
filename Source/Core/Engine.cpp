@@ -14,7 +14,7 @@ Engine::~Engine()
 	for (auto& it : mModules)
 	{
 		auto& mod = it.second;
-		if (mod.Memory)
+		if (mod.Memory && mod.Destructor)
 		{
 			mod.Destructor(mod.Memory);
 			mod.Memory = nullptr;
@@ -31,7 +31,7 @@ void Engine::init()
 		auto& mod = it.second;
 		if (!mod.Memory || mod.Constructor)
 		{
-			if (mod.Memory)
+			if (mod.Memory && mod.Destructor)
 				mod.Destructor(mod.Memory);
 			mod.Memory = mod.Constructor();
 			mod.Constructor = nullptr;

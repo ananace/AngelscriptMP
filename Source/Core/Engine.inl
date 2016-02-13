@@ -18,6 +18,15 @@ void Engine::add(Args... args)
 }
 
 template<typename T>
+void Engine::set(T* data)
+{
+	if (has<T>())
+		return;
+
+	mModules[typeid(T)] = { nullptr, nullptr, data };
+}
+
+template<typename T>
 T& Engine::get() const
 {
     return *(T*)(mModules.at(typeid(T)).Memory);

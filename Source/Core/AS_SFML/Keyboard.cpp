@@ -27,7 +27,10 @@ void as::priv::RegKeyboard(asIScriptEngine* eng)
 #undef K
 
 	AS_ASSERT(eng->RegisterGlobalFunction("bool IsPressed(Key)", asFUNCTION(sf::Keyboard::isKeyPressed), asCALL_CDECL));
+
+#if SFML_VERSION_MINOR > 1
 	AS_ASSERT(eng->RegisterGlobalFunction("void ShowVirtual(bool)", asFUNCTION(sf::Keyboard::setVirtualKeyboardVisible), asCALL_CDECL));
+#endif
 
 	AS_ASSERT(eng->SetDefaultNamespace(""));
 }

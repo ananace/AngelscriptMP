@@ -49,6 +49,52 @@ namespace sf
 
 		return a;
 	}
+
+	namespace
+	{
+	void opAdd(asIScriptGeneric* gen)
+	{
+		sf::Vector3f* a = (sf::Vector3f*)gen->GetObject();
+		sf::Vector3f* b = (sf::Vector3f*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(*a + *b);
+	}
+	void opSub(asIScriptGeneric* gen)
+	{
+		sf::Vector3f* a = (sf::Vector3f*)gen->GetObject();
+		sf::Vector3f* b = (sf::Vector3f*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(*a - *b);
+	}
+	void opDiv(asIScriptGeneric* gen)
+	{
+		sf::Vector3f* a = (sf::Vector3f*)gen->GetObject();
+		sf::Vector3f* b = (sf::Vector3f*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(*a / *b);
+	}
+	void opDivFloat(asIScriptGeneric* gen)
+	{
+		sf::Vector3f* a = (sf::Vector3f*)gen->GetObject();
+		float b = gen->GetArgFloat(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(*a / b);
+	}
+	void opMul(asIScriptGeneric* gen)
+	{
+		sf::Vector3f* a = (sf::Vector3f*)gen->GetObject();
+		sf::Vector3f* b = (sf::Vector3f*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(*a * *b);
+	}
+	void opMulFloat(asIScriptGeneric* gen)
+	{
+		sf::Vector3f* a = (sf::Vector3f*)gen->GetObject();
+		float b = gen->GetArgFloat(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector3f(*a * b);
+	}
+	}
 }
 
 void as::priv::RegVec3(asIScriptEngine* eng)
@@ -68,12 +114,12 @@ void as::priv::RegVec3(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3& opAssign(const Vec3&in)", asMETHODPR(sf::Vector3f, operator=, (const sf::Vector3f&), sf::Vector3f&), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "bool opEquals(const Vec3&in) const", asFUNCTIONPR(sf::operator==, (const sf::Vector3f&, const sf::Vector3f&), bool), asCALL_CDECL_OBJFIRST));
 
-	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec2 opAdd(const Vec3&in) const", asFUNCTIONPR(sf::operator+, (const sf::Vector3f&, const sf::Vector3f&), sf::Vector3f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec2 opSub(const Vec3&in) const", asFUNCTIONPR(sf::operator-, (const sf::Vector3f&, const sf::Vector3f&), sf::Vector3f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec2 opDiv(const Vec3&in) const", asFUNCTIONPR(sf::operator/, (const sf::Vector3f&, const sf::Vector3f&), sf::Vector3f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec2 opDiv(float) const", asFUNCTIONPR(sf::operator/, (const sf::Vector3f&, float), sf::Vector3f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec2 opMul(const Vec3&in) const", asFUNCTIONPR(sf::operator*, (const sf::Vector3f&, const sf::Vector3f&), sf::Vector3f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec2 opMul(float) const", asFUNCTIONPR(sf::operator*, (const sf::Vector3f&, float), sf::Vector3f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3 opAdd(const Vec3&in) const", asFUNCTION(sf::opAdd), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3 opSub(const Vec3&in) const", asFUNCTION(sf::opSub), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3 opDiv(const Vec3&in) const", asFUNCTION(sf::opDiv), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3 opDiv(float) const", asFUNCTION(sf::opDivFloat), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3 opMul(const Vec3&in) const", asFUNCTION(sf::opMul), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3 opMul(float) const", asFUNCTION(sf::opMulFloat), asCALL_GENERIC));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3& opAddAssign(const Vec3&in)", asFUNCTIONPR(sf::operator+=, (sf::Vector3f&, const sf::Vector3f&), sf::Vector3f&), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Vec3", "Vec3& opSubAssign(const Vec3&in)", asFUNCTIONPR(sf::operator-=, (sf::Vector3f&, const sf::Vector3f&), sf::Vector3f&), asCALL_CDECL_OBJFIRST));

@@ -61,6 +61,15 @@ inline void SetLength(sf::Vector3f& v, float len)
 	v.y *= newLen;
 	v.z *= newLen;
 }
+
+template<>
+inline sf::Vector2f Normalized(const sf::Vector2f& v)
+{
+	auto copy = v;
+	SetLength(copy, 1);
+	return copy;
+}
+
 template<typename T>
 constexpr float PolarAngle(const T& v)
 {

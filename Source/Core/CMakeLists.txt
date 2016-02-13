@@ -22,6 +22,7 @@ SET(SOURCES
 	Engine.cpp
 	FileWatcher.cpp
 	Math.cpp
+	ScriptException.cpp
 	ScriptManager.cpp
 	Time.cpp
 

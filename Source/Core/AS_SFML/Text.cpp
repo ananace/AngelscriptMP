@@ -57,7 +57,9 @@ void as::priv::RegText(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterEnumValue("Style", "Bold", sf::Text::Bold));
 	AS_ASSERT(eng->RegisterEnumValue("Style", "Italic", sf::Text::Italic));
 	AS_ASSERT(eng->RegisterEnumValue("Style", "Underlined", sf::Text::Underlined));
+#if SFML_VERSION_MINOR > 1
 	AS_ASSERT(eng->RegisterEnumValue("Style", "StrikeThrough", sf::Text::StrikeThrough));
+#endif
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "Text& opAssign(const Text&in)", asMETHODPR(sf::Text, operator=, (const sf::Text&), sf::Text&), asCALL_THISCALL));

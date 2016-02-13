@@ -4,102 +4,18 @@
 
 #include <angelscript.h>
 
+#include <Core/AS_Addons/scriptbuilder/scriptbuilder.h>
+
 #include <algorithm>
+#include <iterator>
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <sstream>
-
-#ifndef NDEBUG
-ASException::ASException(const std::string& message, int errcode, const std::string& file, int line) : std::runtime_error("")
-{
-	std::ostringstream oss;
-
-	if (file.empty())
-		oss << message << " (" << errcode << " - " << std::string(GetMessage(errcode)) << ")";
-	else
-		oss << file << ":" << line << ": Call to AngelScript failed with error " << (-errcode) << " - " << std::string(GetMessage(errcode)) << std::endl << ">  The call was: '" << message << "'";
-
-	mMessage = oss.str();
-}
-
-const char* ASException::what() const noexcept
-{
-	return mMessage.c_str();
-}
-
-inline const char* ASException::GetMessage(int code) noexcept
-{
-	switch (code)
-	{
-	case asSUCCESS:
-		return "Success";
-	case asERROR:
-		return "Error";
-	case asCONTEXT_ACTIVE:
-		return "Context is active";
-	case asCONTEXT_NOT_FINISHED:
-		return "Context is not finished";
-	case asCONTEXT_NOT_PREPARED:
-		return "Context is not prepared";
-	case asINVALID_ARG:
-		return "Invalid argument";
-	case asNO_FUNCTION:
-		return "No function";
-	case asNOT_SUPPORTED:
-		return "Not supported";
-	case asINVALID_NAME:
-		return "Invalid name";
-	case asNAME_TAKEN:
-		return "Name is taken";
-	case asINVALID_DECLARATION:
-		return "Invalid declaration";
-	case asINVALID_OBJECT:
-		return "Invalid object";
-	case asINVALID_TYPE:
-		return "Invalid type";
-	case asALREADY_REGISTERED:
-		return "Already registered";
-	case asMULTIPLE_FUNCTIONS:
-		return "Multiple functions";
-	case asNO_MODULE:
-		return "No module";
-	case asNO_GLOBAL_VAR:
-		return "No global variable";
-	case asINVALID_CONFIGURATION:
-		return "Invalid configuration";
-	case asINVALID_INTERFACE:
-		return "Invalid interface";
-	case asCANT_BIND_ALL_FUNCTIONS:
-		return "Can't bind all functions";
-	case asLOWER_ARRAY_DIMENSION_NOT_REGISTERED:
-		return "Lower array dimension not registered";
-	case asWRONG_CONFIG_GROUP:
-		return "Wrong config group";
-	case asCONFIG_GROUP_IS_IN_USE:
-		return "Config group is in use";
-	case asILLEGAL_BEHAVIOUR_FOR_TYPE:
-		return "Illegal behaviour for type";
-	case asWRONG_CALLING_CONV:
-		return "Wrong calling convention";
-	case asBUILD_IN_PROGRESS:
-		return "Build in progress";
-	case asINIT_GLOBAL_VARS_FAILED:
-		return "Initializing global variables failed";
-	case asOUT_OF_MEMORY:
-		return "Out of memory";
-	case asMODULE_IS_IN_USE:
-		return "Module is in use";
-
-	default:
-		return "";
-	}
-}
-#endif
 
 namespace
 {
-
-	void error(const asSMessageInfo* msg)
+	void error(ScriptManager& sman, const asSMessageInfo* msg)
 	{
 		std::cerr << "Angelscript ";
 		switch (msg->type)
@@ -150,6 +66,20 @@ namespace
 	};
 }
 
+ScriptManager::ScriptManager() :
+	mEngine(nullptr)
+{
+
+}
+
+ScriptManager::~ScriptManager()
+{
+	unloadAll();
+
+	mEngine->Release();
+	mEngine = nullptr;
+}
+
 void ScriptManager::addExtension(const std::string& name, const ScriptExtensionFun& function)
 {
 	mExtensions.emplace_back(name, function);
@@ -171,7 +101,8 @@ void ScriptManager::init()
 	});
 
 	asIScriptEngine* eng = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-	eng->SetMessageCallback(asFUNCTION(error), nullptr, asCALL_CDECL);
+	eng->SetUserData(this, 0x4547);
+	eng->SetMessageCallback(asFUNCTION(error), this, asCALL_CDECL_OBJFIRST);
 
 #ifndef NDEBUG
 	std::unordered_map<std::string, uint32_t> counts;
@@ -212,6 +143,15 @@ void ScriptManager::init()
 	mEngine = eng;
 }
 
+
+bool ScriptManager::isLoaded(const std::string& name) const
+{
+	std::string lower;
+	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
+
+	return mScripts.count(lower) > 0;
+}
+
 bool ScriptManager::loadFromFile(const std::string& file, ScriptType type)
 {
 	std::ifstream ifs(file.c_str());
@@ -234,10 +174,24 @@ bool ScriptManager::loadFromFile(const std::string& file, ScriptType type)
 }
 bool ScriptManager::loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type)
 {
-	bool reload = mScripts.count(name) > 0;
+	std::string lower;
+	std::transform(name.begin(), name.end(), std::back_inserter(lower), ::tolower);
 
-	std::list<std::pair<asIScriptObject*, bool>> toPersist;
-	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
+	if (type == Type_Autodetect)
+	{
+		if (lower.substr(lower.size() - 4) == ".asb")
+			type = Type_Bytecode;
+		else if (lower.substr(lower.size() - 3) == ".as")
+			type = Type_Text;
+		else
+			return false;
+	}
+
+	bool reload = mScripts.count(lower) > 0;
+
+	std::list<asIScriptObject*> changes;
+
+	asIScriptModule* module = mEngine->GetModule(lower.c_str(), asGM_ONLY_IF_EXISTS);
 	CSerializer serial;
 
 	if (reload && module)
@@ -245,20 +199,25 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		for (auto& reg : mSerializers)
 			serial.AddUserType(reg.second(), reg.first);
 
-		for (auto it = mPersistant.begin(); it != mPersistant.end();)
+		for (auto it = mChangeNotice.begin(); it != mChangeNotice.end();)
 		{
-			auto* obj = *it;
+			if (it->second.WeakRef->Get())
+			{
+				it->second.WeakRef->Release();
+				it = mChangeNotice.erase(it);
+				continue;
+			}
+
+			auto* obj = it->first;
 
 			if (obj->GetObjectType()->GetModule() == module)
 			{
 				serial.AddExtraObjectToStore(obj);
-				toPersist.push_back({ obj, false });
-				obj->AddRef();
 
-				it = mPersistant.erase(it);
+				changes.push_back(it->first);
 			}
-			else
-				++it;
+
+			++it;
 		}
 
 		serial.Store(module);
@@ -268,20 +227,25 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	if (type == Type_Text)
 	{
 		static const char* scratchName = "!!ScratchSpace!!";
+		CScriptBuilder builder;
 
-		mBuilder.StartNewModule(mEngine, scratchName);
+		for (auto& def : mDefines)
+			builder.DefineWord(def.c_str());
 
-		mBuilder.AddSectionFromMemory(name.c_str(), (const char*)data, len);
+		builder.StartNewModule(mEngine, scratchName);
 
-		int r = mBuilder.BuildModule();
-		if (r < 0)
-		{
-			for (auto& it : toPersist)
+		for (auto& callback : mPreLoadCallbacks)
+			if (!callback.second(builder.GetModule()))
 			{
-				it.first->Release();
-				mPersistant.push_back(it.first);
+				mEngine->DiscardModule(scratchName);
+				return false;
 			}
 
+		builder.AddSectionFromMemory(lower.c_str(), (const char*)data, len);
+
+		int r = builder.BuildModule();
+		if (r < 0)
+		{
 #ifndef NDEBUG
 			puts(ASException::GetMessage(r));
 #endif
@@ -289,9 +253,9 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 		}
 
 #ifdef NDEBUG
-		mBuilder.GetModule()->SaveByteCode(&bcode, true);
+		builder.GetModule()->SaveByteCode(&bcode, true);
 #else
-		mBuilder.GetModule()->SaveByteCode(&bcode, false);
+		builder.GetModule()->SaveByteCode(&bcode, false);
 #endif
 
 		mEngine->DiscardModule(scratchName);
@@ -304,87 +268,53 @@ bool ScriptManager::loadFromMemory(const std::string& name, const void* data, si
 	if (module)
 		module->Discard();
 
-	module = mEngine->GetModule(name.c_str(), asGM_ALWAYS_CREATE);
+	module = mEngine->GetModule(lower.c_str(), asGM_ALWAYS_CREATE);
+
+	// FIXME? Preload callbacks can not act on bytecode anyway
+	/*
+	if (type == Type_Bytecode)
+		for (auto& callback : mPreLoadCallbacks)
+			if (!callback.second(module))
+			{
+				module->Discard();
+
+				return false;
+			}
+	*/
+
 	int r = module->LoadByteCode(&bcode);
 	if (r < 0)
 	{
-		for (auto& it : toPersist)
-		{
-			it.first->Release();
-			mPersistant.push_back(it.first);
-		}
-
 		module->Discard();
 
 		return false;
 	}
 
+	module->BindAllImportedFunctions();
 
-	if (mScripts.count(name) == 0)
-		mScripts[name].Name = name;
+	if (mScripts.count(lower) == 0)
+	{
+		mScripts[lower].Name = name;
+		mScripts[lower].DirectLoad = true;
+	}
 
-	auto* fun = module->GetFunctionByName("OnLoad");
 	if (reload)
 	{
 		serial.Restore(module);
 
-		for (auto& it : toPersist)
+		for (auto& it : changes)
 		{
-			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it.first);
-			mPersistant.push_back(newObj);
+			auto* newObj = (asIScriptObject*)serial.GetPointerToRestoredObject(it);
 
-			for (auto& hooks : mScriptHooks)
-			{
-				for (auto& hook : hooks.second)
-				{
-					if (hook.Object == it.first)
-					{
-						auto oldFunc = hook.Function;
+			auto notice = mChangeNotice[it];
+			mChangeNotice.erase(it);
 
-						if (!it.second && hook.Object->Release() <= 0)
-							it.second = true;
-
-						hook.Object = newObj;
-						hook.Function = newObj->GetObjectType()->GetMethodByName(oldFunc->GetName());
-
-						hook.Object->AddRef();
-					}
-				}
-			}
-
-			if (!it.second && it.first->Release() <= 0)
-				it.second = true;
+			notice.WeakRef->Release();
+			notice.Callback(newObj);
 		}
 
 		mEngine->GarbageCollect(asGC_FULL_CYCLE);
-
-		fun = module->GetFunctionByName("OnReload");
-		if (fun)
-		{
-			auto* ctx = mEngine->RequestContext();
-			ctx->Prepare(fun);
-
-			ctx->Execute();
-
-			ctx->Unprepare();
-			mEngine->ReturnContext(ctx);
-		}
 	}
-	else if (fun)
-	{
-		auto* ctx = mEngine->RequestContext();
-		ctx->Prepare(fun);
-
-		ctx->Execute();
-
-		ctx->Unprepare();
-		mEngine->ReturnContext(ctx);
-	}
-
-	if (fun = module->GetFunctionByName("OnLoad"))
-		module->RemoveFunction(fun);
-	if (fun = module->GetFunctionByName("OnReload"))
-		module->RemoveFunction(fun);
 
 	return true;
 }
@@ -397,10 +327,127 @@ bool ScriptManager::loadFromStream(const std::string& name, sf::InputStream& str
 	return loadFromMemory(name, &data[0], len, type);
 }
 
+void ScriptManager::unload(const std::string& name)
+{
+	asIScriptModule* module = mEngine->GetModule(name.c_str(), asGM_ONLY_IF_EXISTS);
+	if (!module)
+		return;
+
+	std::list<asIScriptObject*> toRemove;
+	auto copy = mChangeNotice;
+	for (auto& it : copy)
+	{
+		auto* obj = it.first;
+
+		if (obj->GetObjectType()->GetModule() == module)
+		{
+			it.second.Callback(nullptr);
+
+			toRemove.push_back(it.first);
+		}
+	}
+
+	for (auto& obj : toRemove)
+		removeChangeNotice(obj);
+
+	for (auto& hooks : mScriptHooks)
+	{
+		for (auto it = hooks.second.begin(); it != hooks.second.end();)
+		{
+			auto* obj = it->Object;
+
+			if (obj->GetObjectType()->GetModule() == module)
+			{
+				it->WeakRef->Release();
+				it = hooks.second.erase(it);
+			}
+			else
+				++it;
+		}
+	}
+
+	module->Discard();
+
+	mScripts.erase(name);
+
+	mEngine->GarbageCollect(asGC_FULL_CYCLE, 2);
+}
+
+void ScriptManager::unloadAll()
+{
+	auto toUnload = std::move(mScripts);
+	for (auto script : toUnload)
+	{
+		unload(script.first);
+	}
+
+	mEngine->GarbageCollect(asGC_FULL_CYCLE, 5);
+}
+
+bool ScriptManager::isDefined(const std::string& define) const
+{
+	return std::find(mDefines.begin(), mDefines.end(), define) != mDefines.end();
+}
+void ScriptManager::addDefine(const std::string& define)
+{
+	if (std::find(mDefines.begin(), mDefines.end(), define) != mDefines.end())
+		return;
+
+	mDefines.push_back(define);
+}
+void ScriptManager::removeDefine(const std::string& define)
+{
+	auto it = std::find(mDefines.begin(), mDefines.end(), define);
+	if (it != mDefines.end())
+		mDefines.erase(it);
+}
+void ScriptManager::clearDefines()
+{
+	mDefines.clear();
+}
+
+
+void ScriptManager::clearPreLoadCallbacks()
+{
+	mPreLoadCallbacks.clear();
+}
+void ScriptManager::removePreLoadCallback(const std::string& id)
+{
+	mPreLoadCallbacks.erase(id);
+}
+void ScriptManager::addPreLoadCallback(const std::string& id, const ScriptPreLoadCallbackFun& func)
+{
+	mPreLoadCallbacks[id] = func;
+}
+bool ScriptManager::hasPreLoadCallback(const std::string& id) const
+{
+	return mPreLoadCallbacks.count(id) > 0;
+}
+
+void ScriptManager::addChangeNotice(asIScriptObject* obj, const ScriptObjectCallbackFun& callback)
+{
+	if (mChangeNotice.count(obj) == 0)
+	{
+		mChangeNotice[obj] = { obj->GetWeakRefFlag(), callback };
+		obj->GetWeakRefFlag()->AddRef();
+	}
+}
+void ScriptManager::removeChangeNotice(asIScriptObject* obj)
+{
+	if (mChangeNotice.count(obj) > 0)
+	{
+		auto& notice = mChangeNotice.at(obj);
+		notice.WeakRef->Release();
+		mChangeNotice.erase(obj);
+	}
+}
+
+
 void ScriptManager::registerHook(const std::string& name, const std::string& decl)
 {
 	mRegisteredHooks.emplace(name, decl);
 }
+
 bool ScriptManager::addHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj)
 {
 	if (mRegisteredHooks.count(hook) == 0)
@@ -418,7 +465,10 @@ bool ScriptManager::addHook(const std::string& hook, asIScriptFunction* func, as
 	auto& hooks = mScriptHooks[hook];
 	auto it = std::find_if(hooks.begin(), hooks.end(), [obj, func](ScriptHook& hook) { return hook.Function == func && hook.Object == obj; });
 	if (it == hooks.end())
-		hooks.push_back({ func, obj });
+	{
+		hooks.push_back({ func, obj, obj->GetWeakRefFlag() });
+		obj->GetWeakRefFlag()->AddRef();
+	}
 
 	return true;
 }
@@ -428,11 +478,13 @@ bool ScriptManager::removeHook(const std::string& hook, asIScriptFunction* func,
 		return false;
 
 	auto& hooks = mScriptHooks.at(hook);
-	auto it = std::remove_if(hooks.begin(), hooks.end(), [obj, func](ScriptHook& hook) { return hook.Function == func && hook.Object == obj; });
+	auto it = std::find_if(hooks.begin(), hooks.end(), [obj, func](ScriptHook& hook) { return hook.Function == func && hook.Object == obj; });
 
 	if (it != hooks.end())
 	{
+		it->WeakRef->Release();
 		hooks.erase(it, hooks.end());
+
 		return true;
 	}
 
@@ -444,7 +496,7 @@ void ScriptManager::addHookFromScript(const std::string& hook, const std::string
 	auto* ctx = asGetActiveContext();
 	if (mRegisteredHooks.count(hook) == 0)
 	{
-		ctx->SetException("No such hook");
+		ctx->SetException(("No hook named '" + hook + "'").c_str());
 		return;
 	}
 
@@ -453,14 +505,55 @@ void ScriptManager::addHookFromScript(const std::string& hook, const std::string
 
 	if (!addHook(hook, funcptr, obj))
 	{
+		std::string decl = funcptr->GetDeclaration(false);
+		std::string name = funcptr->GetName();
+		auto off = decl.find(name);
+		decl.replace(off, name.length(), "f");
+
 		ctx->SetException(("Invalid declaration for hook '" + hook + "'\n" +
-			"Expects " + mRegisteredHooks.at(hook)).c_str());
+			"Got " + decl + " but expects " + mRegisteredHooks.at(hook)).c_str());
 
 		return;
 	}
 
-	addPersist(obj);
-	obj->AddRef();
+	static std::function<void(asIScriptObject* oldObj, asIScriptFunction* func, asIScriptObject* newObj)> updateChangeNotice;
+	if (!updateChangeNotice)
+		updateChangeNotice = [this](asIScriptObject* oldObj, asIScriptFunction* func, asIScriptObject* newObj)
+		{
+			for (auto& hooks : mScriptHooks)
+			{
+				auto it = std::find_if(hooks.second.begin(), hooks.second.end(), [oldObj, func](const ScriptHook& h) { return h.Function == func && h.Object == oldObj; });
+
+				if (it != hooks.second.end())
+				{
+					auto* decl = it->Function->GetDeclaration(false);
+
+					if (newObj)
+						newObj->GetWeakRefFlag()->AddRef();
+
+					it->WeakRef->Release();
+					removeChangeNotice(it->Object);
+
+					if (newObj)
+					{
+						it->Object = newObj;
+						it->Function = newObj->GetObjectType()->GetMethodByDecl(decl);
+
+						it->WeakRef = it->Object->GetWeakRefFlag();
+
+						addChangeNotice(newObj, [=](asIScriptObject* evenNewerObj) {
+							updateChangeNotice(newObj, func, evenNewerObj);
+						});
+					}
+
+					hooks.second.erase(it);
+				}
+			}
+		};
+
+	addChangeNotice(obj, [=](asIScriptObject* newObj) {
+		updateChangeNotice(obj, funcptr, newObj);
+	});
 }
 void ScriptManager::removeHookFromScript(const std::string& hook, const std::string& func)
 {
@@ -497,28 +590,30 @@ void ScriptManager::removeHookFromScript(const std::string& hook, const std::str
 	else
 		funcptr = obj->GetObjectType()->GetMethodByName(func.c_str());
 
-	if (removeHook(hook, funcptr, obj))
-	{
-		int i = obj->Release();
-		if (i <= 0)
-			removePersist(obj);
-	}
+	removeHook(hook, funcptr, obj);
 }
 
-void ScriptManager::addPersist(asIScriptObject* obj)
-{
-	auto it = std::find(mPersistant.begin(), mPersistant.end(), obj);
-	if (it == mPersistant.end())
-		mPersistant.push_back(obj);
-}
-void ScriptManager::removePersist(asIScriptObject* obj)
-{
-	auto it = std::find(mPersistant.begin(), mPersistant.end(), obj);
-	if (it != mPersistant.end())
-		mPersistant.erase(it);
-}
 
 asIScriptEngine* ScriptManager::getEngine()
 {
 	return mEngine;
 }
+
+#define PRIMITIVE_ARG(Type, SetType) template<> \
+int ScriptManager::setCTXArg<Type>(asIScriptContext* ctx, uint32_t id, Type arg) \
+{ \
+	return ctx->SetArg ## SetType (id, arg); \
+}//
+
+PRIMITIVE_ARG(uint8_t, Byte)
+PRIMITIVE_ARG(uint16_t, Word)
+PRIMITIVE_ARG(uint32_t, DWord)
+PRIMITIVE_ARG(uint64_t, QWord)
+PRIMITIVE_ARG(bool, Byte)
+PRIMITIVE_ARG(int8_t, Byte)
+PRIMITIVE_ARG(int16_t, Word)
+PRIMITIVE_ARG(int32_t, DWord)
+PRIMITIVE_ARG(int64_t, QWord)
+PRIMITIVE_ARG(float, Float)
+PRIMITIVE_ARG(double, Double)
+#undef PRIMITIVE_ARG

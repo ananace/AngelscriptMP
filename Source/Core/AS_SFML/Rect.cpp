@@ -53,6 +53,22 @@ namespace
 	{
 		return{ rect->width, rect->height };
 	}
+
+	void getPosGen(asIScriptGeneric* gen)
+	{
+		sf::FloatRect* rect = (sf::FloatRect*)gen->GetObject();
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(getPos(rect));
+	}
+	void getCenterGen(asIScriptGeneric* gen)
+	{
+		sf::FloatRect* rect = (sf::FloatRect*)gen->GetObject();
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(getCenter(rect));
+	}
+	void getSizeGen(asIScriptGeneric* gen)
+	{
+		sf::FloatRect* rect = (sf::FloatRect*)gen->GetObject();
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(getSize(rect));
+	}
 }
 
 void as::priv::RegRect(asIScriptEngine* eng)
@@ -75,11 +91,11 @@ void as::priv::RegRect(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool opEquals(const Rect&in) const", asFUNCTIONPR(sf::operator==, (const sf::FloatRect&, const sf::FloatRect&), bool), asCALL_CDECL_OBJFIRST));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "void set_Center(const Vec2&in)", asFUNCTION(setCenter), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Center() const", asFUNCTION(getCenter), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Center() const", asFUNCTION(getCenterGen), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "void set_Position(const Vec2&in)", asFUNCTION(setPos), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Position() const", asFUNCTION(getPos), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Position() const", asFUNCTION(getPosGen), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "void set_Size(const Vec2&in)", asFUNCTION(setSize), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Size() const", asFUNCTION(getSize), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Rect", "Vec2 get_Size() const", asFUNCTION(getSizeGen), asCALL_GENERIC));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool Contains(float x, float y) const", asMETHODPR(sf::FloatRect, contains, (float, float) const, bool), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Rect", "bool Contains(const Vec2&in) const", asMETHODPR(sf::FloatRect, contains, (const sf::Vector2f&) const, bool), asCALL_THISCALL));

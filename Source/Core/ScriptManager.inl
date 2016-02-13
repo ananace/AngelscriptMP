@@ -34,40 +34,16 @@ void ScriptManager::registerSerializedType(const std::string& name)
 
 namespace
 {
-	inline void setCTXArg(asIScriptContext*, uint32_t) { }
+	template<typename... Args>
+	inline bool setCTXArgs(asIScriptContext*, uint32_t) { return true; }
 
-#define PRIMITIVE_ARG(Type, SetType) template<typename... Args> \
-    inline void setCTXArg(asIScriptContext* ctx, uint32_t id, Type arg, Args... args) \
-    { \
-        ctx->SetArg ## SetType (id, arg); \
-        setCTXArg(ctx, id + 1, args...); \
-    } //
-
-	PRIMITIVE_ARG(uint8_t, Byte)
-	PRIMITIVE_ARG(uint16_t, Word)
-	PRIMITIVE_ARG(uint32_t, DWord)
-	PRIMITIVE_ARG(uint64_t, QWord)
-	PRIMITIVE_ARG(int8_t, Byte)
-	PRIMITIVE_ARG(int16_t, Word)
-	PRIMITIVE_ARG(int32_t, DWord)
-	PRIMITIVE_ARG(int64_t, QWord)
-	PRIMITIVE_ARG(float, Float)
-	PRIMITIVE_ARG(double, Double)
-
-#undef PRIMITIVE_ARG
-
-	template<typename T, typename... Args>
-	inline void setCTXArg(asIScriptContext* ctx, uint32_t id, T* arg, Args... args)
+	template<typename Arg, typename... Args>
+	inline bool setCTXArgs(asIScriptContext* ctx, uint32_t id, Arg a1, Args... args)
 	{
-		ctx->SetArgObject(id, const_cast<T*>(arg));
-		setCTXArg(ctx, id + 1, args...);
-	}
+		if (ScriptManager::setCTXArg<Arg>(ctx, id, std::forward<Arg>(a1)) < 0)
+			return false;
 
-	template<typename T, typename... Args>
-	inline void setCTXArg(asIScriptContext* ctx, uint32_t id, const T& arg, Args... args)
-	{
-		ctx->SetArgObject(id, const_cast<T*>(&arg));
-		setCTXArg(ctx, id + 1, args...);
+		return setCTXArgs(ctx, id, std::forward<Args>(args)...);
 	}
 }
 
@@ -79,17 +55,27 @@ void ScriptManager::runHook(const std::string& name, Args... args)
 
 	auto* ctx = mEngine->RequestContext();
 
-	for (auto& hook : mScriptHooks.at(name))
+	auto copy = mScriptHooks.at(name);
+
+	for (auto& hook : copy)
 	{
 		int r = 0;
 		r = ctx->Prepare(hook.Function);
 		if (r < 0)
 			continue;
+		
 		r = ctx->SetObject(hook.Object);
 		if (r < 0)
+		{
+			ctx->Unprepare();
 			continue;
+		}
 
-		setCTXArg(ctx, 0, std::forward<Args>(args)...);
+		if (!setCTXArgs<Args...>(ctx, 0, std::forward<Args>(args)...))
+		{
+			ctx->Unprepare();
+			continue;
+		}
 
 		ctx->Execute();
 

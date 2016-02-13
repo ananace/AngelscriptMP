@@ -17,6 +17,8 @@ public:
 	template<typename T, typename... Args>
 	void add(Args...);
 	template<typename T>
+	void set(T*);
+	template<typename T>
 	T& get() const;
 	template<typename T>
 	bool has() const;

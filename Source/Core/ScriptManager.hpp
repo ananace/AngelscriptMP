@@ -2,7 +2,6 @@
 
 #include <angelscript.h>
 #include <Core/AS_Addons/serializer/serializer.h>
-#include <Core/AS_Addons/scriptbuilder/scriptbuilder.h>
 
 #include <functional>
 #include <list>
@@ -49,36 +48,77 @@ public:
 
 	enum ScriptType
 	{
+		Type_Autodetect,
 		Type_Text,
 		Type_Bytecode
 	};
 
+	typedef std::function<void(asIScriptObject*)> ScriptObjectCallbackFun;
 	typedef std::function<void(asIScriptEngine*)> ScriptExtensionFun;
+	typedef std::function<bool(asIScriptModule*)> ScriptPreLoadCallbackFun;
+
+
+	// Object functions
+
+	ScriptManager();
+	ScriptManager(const ScriptManager&) = delete;
+	~ScriptManager();
+
+	ScriptManager& operator=(const ScriptManager&) = delete;
+
+	const asIScriptEngine* getEngine() const;
+	asIScriptEngine* getEngine();
+
+
+	// Script interface functions
 
 	void addExtension(const std::string& name, const ScriptExtensionFun& function);
 	template<typename T>
 	void registerSerializedType(const std::string& name);
 	void registerSerializedType(const std::string& name, const std::function<CUserType*()>& ser);
 
-	bool loadFromFile(const std::string& file, ScriptType type = Type_Text);
-	bool loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type = Type_Text);
-	bool loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type = Type_Text);
-
-	void addDefine(const std::string& define);
-
 	void init();
 
-	void registerHook(const std::string& name, const std::string& decl);
+
+	// Script management functions
+
+	bool isLoaded(const std::string& name) const;
+
+	bool loadFromFile(const std::string& file, ScriptType type = Type_Autodetect);
+	bool loadFromMemory(const std::string& name, const void* data, size_t len, ScriptType type = Type_Autodetect);
+	bool loadFromStream(const std::string& name, sf::InputStream& stream, ScriptType type = Type_Autodetect);
+
+	void unload(const std::string& name);
+	void unloadAll();
+
+	bool isDefined(const std::string& define) const;
+	void addDefine(const std::string& define);
+	void removeDefine(const std::string& define);
+	void clearDefines();
+
+
+	// Utility functions
+
+	void clearPreLoadCallbacks();
+	void removePreLoadCallback(const std::string& id);
+	void addPreLoadCallback(const std::string& id, const ScriptPreLoadCallbackFun& func);
+	bool hasPreLoadCallback(const std::string& id) const;
+
+	void addChangeNotice(asIScriptObject* obj, const ScriptObjectCallbackFun& callback);
+	void removeChangeNotice(asIScriptObject* obj);
+
+
+	// Script hook
+
 	template<typename... Args>
 	void runHook(const std::string& name, Args... args);
+	template<typename T>
+	static int setCTXArg(asIScriptContext*, uint32_t id, T arg);
+
+	void registerHook(const std::string& name, const std::string& decl);
 
 	bool addHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
 	bool removeHook(const std::string& hook, asIScriptFunction* func, asIScriptObject* obj);
-
-	void addPersist(asIScriptObject* obj);
-	void removePersist(asIScriptObject* obj);
-
-	asIScriptEngine* getEngine();
 
 private:
 	struct Script
@@ -86,23 +126,30 @@ private:
 		std::string Name;
 		bool DirectLoad;
 	};
+	struct ChangeNotice
+	{
+		asILockableSharedBool* WeakRef;
+		std::function<void(asIScriptObject*)> Callback;
+	};
 	struct ScriptHook
 	{
 		asIScriptFunction* Function;
 		asIScriptObject* Object;
+		asILockableSharedBool* WeakRef;
 	};
 
 	void addHookFromScript(const std::string& hook, const std::string& func);
 	void removeHookFromScript(const std::string& hook, const std::string& func);
 	
-	std::list<asIScriptObject*> mPersistant;
+	std::list<std::string> mDefines;
+	std::unordered_map<asIScriptObject*, ChangeNotice> mChangeNotice;
 	std::list<std::pair<std::string, ScriptExtensionFun>> mExtensions;
 	std::unordered_map<std::string, Script> mScripts;
 	std::unordered_map<std::string, std::function<CUserType*()>> mSerializers;
 	std::unordered_map<std::string, std::string> mRegisteredHooks;
 	std::unordered_map<std::string, std::list<ScriptHook>> mScriptHooks;
+	std::unordered_map<std::string, ScriptPreLoadCallbackFun> mPreLoadCallbacks;
 	asIScriptEngine* mEngine;
-	CScriptBuilder mBuilder;
 };
 
 #include "ScriptManager.inl"

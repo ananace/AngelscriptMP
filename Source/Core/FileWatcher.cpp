@@ -19,6 +19,7 @@
 #include <sys/select.h>
 #include <sys/inotify.h>
 
+#include <algorithm>
 #include <unordered_map>
 #endif
 
@@ -101,15 +102,15 @@ namespace
 				HANDLE hToken;
 
 				if (OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
-				{    
+				{
 					TOKEN_PRIVILEGES tp = { 1 };
-					
+
 					if (LookupPrivilegeValue(NULL, name, &tp.Privileges[0].Luid))
 					{
 						tp.Privileges[0].Attributes = enable ? SE_PRIVILEGE_ENABLED : 0;
-						
+
 						AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), NULL, NULL);
-						
+
 						success = (GetLastError() == ERROR_SUCCESS);
 					}
 
@@ -210,7 +211,7 @@ namespace
 				{
 					pEntry = (FILE_NOTIFY_INFORMATION*)&watch.Buffer[i];
 					i += pEntry->NextEntryOffset;
-					
+
 					if (pEntry->FileNameLength > 0)
 					{
 						std::string path;
@@ -530,7 +531,7 @@ void FileWatcher::recurseDirectory(const std::string& dir, std::list<std::string
 
 		std::string path = dir + '/' + name;
 
-		recurseDirectory(path, subdirs, wildcard);
+		recurseDirectory(path, output, wildcard);
 	}
 
 	closedir(dp);

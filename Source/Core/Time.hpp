@@ -26,6 +26,11 @@ typedef Clock::duration Timespan;
 
 namespace Time
 {
+	inline float Seconds(const Timespan& span)
+	{
+		return std::chrono::duration_cast<std::chrono::duration<float>>(span).count();
+	}
+
 	extern Timespan getRunTime();
 	extern Timespan getClockPrecision();
 	extern void registerTimeTypes(ScriptManager&);

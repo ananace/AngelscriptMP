@@ -25,28 +25,51 @@ namespace
 
 namespace sf
 {
-	sf::Vector2f operator*(const sf::Vector2f& a, const sf::Vector2f& b)
+	namespace
 	{
-		return{ a.x * b.x, a.y * b.y };
-	}
-	sf::Vector2f operator/(const sf::Vector2f& a, const sf::Vector2f& b)
+	void opAdd(asIScriptGeneric* gen)
 	{
-		return{ a.x / b.x, a.y / b.y };
-	}
-	sf::Vector2f& operator*=(sf::Vector2f& a, const sf::Vector2f& b)
-	{
-		a.x *= b.x;
-		a.y *= b.y;
+		sf::Vector2f* a = (sf::Vector2f*)gen->GetObject();
+		sf::Vector2f* b = (sf::Vector2f*)gen->GetArgObject(0);
 
-		return a;
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(*a + *b);
 	}
-	sf::Vector2f& operator/=(sf::Vector2f& a, const sf::Vector2f& b)
+	void opSub(asIScriptGeneric* gen)
 	{
-		a.x /= b.x;
-		a.y /= b.y;
+		sf::Vector2f* a = (sf::Vector2f*)gen->GetObject();
+		sf::Vector2f* b = (sf::Vector2f*)gen->GetArgObject(0);
 
-		return a;
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(*a - *b);
 	}
+	void opDiv(asIScriptGeneric* gen)
+	{
+		sf::Vector2f* a = (sf::Vector2f*)gen->GetObject();
+		sf::Vector2f* b = (sf::Vector2f*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(*a / *b);
+	}
+	void opDivFloat(asIScriptGeneric* gen)
+	{
+		sf::Vector2f* a = (sf::Vector2f*)gen->GetObject();
+		float b = gen->GetArgFloat(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(*a / b);
+	}
+	void opMul(asIScriptGeneric* gen)
+	{
+		sf::Vector2f* a = (sf::Vector2f*)gen->GetObject();
+		sf::Vector2f* b = (sf::Vector2f*)gen->GetArgObject(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(*a * *b);
+	}
+	void opMulFloat(asIScriptGeneric* gen)
+	{
+		sf::Vector2f* a = (sf::Vector2f*)gen->GetObject();
+		float b = gen->GetArgFloat(0);
+
+		new (gen->GetAddressOfReturnLocation()) sf::Vector2f(*a * b);
+	}
+}
 }
 
 void as::priv::RegVec2(asIScriptEngine* eng)
@@ -65,12 +88,12 @@ void as::priv::RegVec2(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opAssign(const Vec2&in)", asMETHODPR(sf::Vector2f, operator=, (const sf::Vector2f&), sf::Vector2f&), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "bool opEquals(const Vec2&in) const", asFUNCTIONPR(sf::operator==, (const sf::Vector2f&, const sf::Vector2f&), bool), asCALL_CDECL_OBJFIRST));
 
-	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opAdd(const Vec2&in) const", asFUNCTIONPR(sf::operator+, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opSub(const Vec2&in) const", asFUNCTIONPR(sf::operator-, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opDiv(const Vec2&in) const", asFUNCTIONPR(sf::operator/, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opDiv(float) const", asFUNCTIONPR(sf::operator/, (const sf::Vector2f&, float), sf::Vector2f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opMul(const Vec2&in) const", asFUNCTIONPR(sf::operator*, (const sf::Vector2f&, const sf::Vector2f&), sf::Vector2f), asCALL_CDECL_OBJFIRST));
-	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opMul(float) const", asFUNCTIONPR(sf::operator*, (const sf::Vector2f&, float), sf::Vector2f), asCALL_CDECL_OBJFIRST));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opAdd(const Vec2&in) const", asFUNCTION(sf::opAdd), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opSub(const Vec2&in) const", asFUNCTION(sf::opSub), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opDiv(const Vec2&in) const", asFUNCTION(sf::opDiv), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opDiv(float) const", asFUNCTION(sf::opDivFloat), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opMul(const Vec2&in) const", asFUNCTION(sf::opMul), asCALL_GENERIC));
+	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2 opMul(float) const", asFUNCTION(sf::opMulFloat), asCALL_GENERIC));
 
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opAddAssign(const Vec2&in)", asFUNCTIONPR(sf::operator+=, (sf::Vector2f&, const sf::Vector2f&), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Vec2", "Vec2& opSubAssign(const Vec2&in)", asFUNCTIONPR(sf::operator-=, (sf::Vector2f&, const sf::Vector2f&), sf::Vector2f&), asCALL_CDECL_OBJFIRST));
