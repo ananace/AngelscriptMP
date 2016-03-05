@@ -7,6 +7,10 @@ SET(HEADERS
 	ScriptManager.inl
 	Time.hpp
 
+	Network/BitReader.hpp
+	Network/BitWriter.hpp
+	Network/Packet.hpp
+
 	AS_Addons/scriptarray/scriptarray.h
 	AS_Addons/scriptbuilder/scriptbuilder.h
 	AS_Addons/scriptmath/scriptmath.h
@@ -25,6 +29,10 @@ SET(SOURCES
 	ScriptException.cpp
 	ScriptManager.cpp
 	Time.cpp
+
+	Network/BitReader.cpp
+	Network/BitWriter.cpp
+	Network/Packet.cpp
 
 	AS_Addons/scriptarray/scriptarray.cpp
 	AS_Addons/scriptbuilder/scriptbuilder.cpp
@@ -54,6 +62,8 @@ SET(SOURCES
 	AS_SFML/View.cpp
 )
 
+SOURCE_GROUP("Header files\\Network" REGULAR_EXPRESSION "Network/[^./]+.(hpp|inl)")
+SOURCE_GROUP("Source files\\Network" REGULAR_EXPRESSION "Network/[^./]+.cpp")
 SOURCE_GROUP("Header files\\AS_Addons" REGULAR_EXPRESSION "AS_Addons/[^.]+.h")
 SOURCE_GROUP("Source files\\AS_Addons" REGULAR_EXPRESSION "AS_Addons/[^.]+.cpp")
 SOURCE_GROUP("Header files\\AS_SFML" REGULAR_EXPRESSION "AS_SFML/[^./]+.(hpp|inl)")
