@@ -22,6 +22,7 @@ extern void RegCircleShape(asIScriptEngine*);
 extern void RegRectangleShape(asIScriptEngine*);
 extern void RegConvexShape(asIScriptEngine*);
 extern void RegSprite(asIScriptEngine*);
+extern void RegShader(asIScriptEngine*);
 extern void RegText(asIScriptEngine*);
 extern void RegFont(asIScriptEngine*);
 extern void RegMusic(asIScriptEngine*);
@@ -42,7 +43,7 @@ struct SFMLType
 
 // Type store
 //============
-static const size_t TypeCount = 19;
+static const size_t TypeCount = 20;
 extern const SFMLType Types[TypeCount];
 
 // Helper functions

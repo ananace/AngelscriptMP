@@ -51,6 +51,7 @@ SET(SOURCES
 	AS_SFML/Music.cpp
 	AS_SFML/Rect.cpp
 	AS_SFML/Renderer.cpp
+	AS_SFML/Shader.cpp
 	AS_SFML/Shapes.cpp
 	AS_SFML/Shared.cpp
 	AS_SFML/Sound.cpp

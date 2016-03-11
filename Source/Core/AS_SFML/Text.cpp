@@ -71,8 +71,12 @@ void as::priv::RegText(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void SetFont(const Font@)", asMETHOD(sf::Text, setFont), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "uint get_CharacterSize() const", asMETHOD(sf::Text, getCharacterSize), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_CharacterSize(uint)", asMETHOD(sf::Text, setCharacterSize), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Color& get_Color() const", asMETHOD(sf::Text, getColor), asCALL_THISCALL));
-	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_Color(const Color&in)", asMETHOD(sf::Text, setColor), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Color& get_FillColor() const", asMETHOD(sf::Text, getFillColor), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_FillColor(const Color&in)", asMETHOD(sf::Text, setFillColor), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Color& get_OutlineColor() const", asMETHOD(sf::Text, getOutlineColor), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_OutlineColor(const Color&in)", asMETHOD(sf::Text, setOutlineColor), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "float get_OutlineThickness() const", asMETHOD(sf::Text, getOutlineThickness), asCALL_THISCALL));
+	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_OutlineThickness(float)", asMETHOD(sf::Text, setOutlineThickness), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "const ::string& get_String() const", asFUNCTION(getTextString), asCALL_GENERIC));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_String(const ::string&in)", asFUNCTION(setTextString), asCALL_CDECL_OBJFIRST));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "uint get_Style() const", asMETHOD(sf::Text, getStyle), asCALL_THISCALL));

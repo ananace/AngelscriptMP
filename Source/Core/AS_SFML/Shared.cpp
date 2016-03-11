@@ -15,6 +15,7 @@ const SFMLType as::priv::Types[TypeCount] = {
 	{ "Renderer", RegRenderer, nullptr },
 	{ "Color", RegColor, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::Color>(); } },
 	{ "Texture", RegTexture, nullptr },
+	{ "Shader", RegShader, nullptr },
 	{ "CircleShape", RegCircleShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::CircleShape>(); } },
 	{ "RectangleShape", RegRectangleShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::RectangleShape>(); } },
 	{ "ConvexShape", RegConvexShape, []() -> CUserType* { return new ScriptManager::CSimpleType<sf::ConvexShape>(); } },
