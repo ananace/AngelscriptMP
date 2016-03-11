@@ -1,9 +1,13 @@
 #include "Application.hpp"
 #include "ResourceManager.hpp"
 
+#include "States/IntroState.hpp"
+
+#include <Core/Math.hpp>
 #include <Core/Time.hpp>
 #include <Core/FileWatcher.hpp>
 
+#include <SFML/Graphics/Font.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Thread.hpp>
 #include <SFML/System/Sleep.hpp>
@@ -13,7 +17,9 @@
 #include <Core/AS_Addons/scriptstdstring/scriptstdstring.h>
 #include <Core/AS_SFML/AS_SFML.hpp>
 
+#ifdef _WIN32
 #include <codecvt>
+#endif
 #include <iostream>
 #include <sstream>
 
@@ -35,6 +41,7 @@ namespace
 				val->m_children[i]->Restore(arr->At(i), arr->GetElementTypeId());
 		}
 	};
+
 	/*
 	struct CGridType : public CUserType
 	{
@@ -146,7 +153,8 @@ namespace
 	}
 }
 
-Application::Application()
+Application::Application() :
+	mState(mEngine)
 {
 	auto dur = Time::getClockPrecision();
 
@@ -160,6 +168,9 @@ Application::Application()
 	mEngine.add<sf::RenderWindow>();
 	mEngine.add<FileWatcher>();
 	mEngine.add<ResourceManager>();
+	mEngine.add<sf::Font>();
+
+	mEngine.set<Application>(this);
 }
 
 Application::~Application()
@@ -171,6 +182,10 @@ void Application::init()
 	auto beg = Clock::now();
 	mEngine.init();
 
+	auto& font = mEngine.get<sf::Font>();
+	font.loadFromFile("FiraSans-Regular.otf");
+
+
 	auto& man = mEngine.get<ScriptManager>();
 
 	man.addExtension("Array", [](asIScriptEngine* eng) { RegisterScriptArray(eng, true); });
@@ -179,6 +194,7 @@ void Application::init()
 	});
 	man.addExtension("Math", RegisterScriptMath);
 	man.addExtension("String", RegisterStdString);
+	man.registerSerializedType<std::string>("string");
 	man.addExtension("String Utils", RegisterStdStringUtils);
 	man.addExtension("Printing", [](asIScriptEngine* eng) {
 		AS_ASSERT(eng->RegisterGlobalFunction("void print(int)", asFUNCTION(print<int>), asCALL_CDECL));
@@ -191,6 +207,7 @@ void Application::init()
 		AS_ASSERT(eng->RegisterGlobalFunction("void println(string&in)", asFUNCTION(println<const std::string&>), asCALL_CDECL));
 		AS_ASSERT(eng->RegisterGlobalFunction("void println(const ?&in)", asFUNCTION(printlnany), asCALL_CDECL));
 	});
+	Math::registerScriptData(man);
 	Time::registerTimeTypes(man);
 	as::SFML::registerTypes(man);
 	mEngine.get<ResourceManager>().registerScript(man);
@@ -198,23 +215,19 @@ void Application::init()
 	man.init();
 
 	man.getEngine()->SetUserData(&mEngine.get<sf::RenderWindow>(), 0x6AE1);
+	man.getEngine()->SetUserData(&font, 0xF077);
 
 	man.registerHook("Tick",   "void f(const Timespan&in)");
 	man.registerHook("Update", "void f(const Timespan&in)");
 	man.registerHook("Draw",   "void f(sf::Renderer@)");
 	man.registerHook("DrawUI", "void f(sf::Renderer@)");
 
-	// Load scripts;
-	std::list<std::string> files;
-	FileWatcher::recurseDirectory(".", files, "*.as");
-
-	for (auto& entry : files)
-	{
-		if (entry.substr(entry.length() - 3) != ".as")
-			continue;
-
-		man.loadFromFile(entry);
-	}
+	man.registerHook("Keyboard.Key", "void f(sf::Keyboard::Key, bool)");
+	man.registerHook("Joystick.Button", "void f(uint, uint, bool)");
+	man.registerHook("Joystick.Moved", "void f(uint, sf::Joystick::Axis, float)");
+	man.registerHook("Mouse.Button", "void f(const sf::Vec2&in, sf::Mouse::Button,bool)");
+	man.registerHook("Mouse.Moved", "void f(const sf::Vec2&in)");
+	man.registerHook("Text.Entered", "void f(uint)");
 
 	auto& watch = mEngine.get<FileWatcher>();
 
@@ -234,7 +247,9 @@ void Application::run()
 	auto& watch = mEngine.get<FileWatcher>();
 	auto& man = mEngine.get<ScriptManager>();
 
-	window.create({ 800, 600 }, "AngelscriptMP Client");
+	mState.primeRT(&window);
+
+	window.create({ 800, 600 }, "Geometry Shaders are Go!");
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
 	{
 		sf::Vector2f size = (sf::Vector2f)window.getSize();
@@ -243,6 +258,11 @@ void Application::run()
 
 		gameView.setSize(gameView.getSize().y * (size.x / size.y), gameView.getSize().y);
 	}
+	window.setView(gameView);
+
+	gameView = window.getView();
+
+	mState.changeState<IntroState>();
 
 	const Timespan tickLength = std::chrono::milliseconds(15);
 	Timespan tickTime(0);
@@ -261,9 +281,8 @@ void Application::run()
 		if (watch.pollChange(modified))
 		{
 			std::cout << modified << " was modified!" << std::endl;
-			if (modified.substr(modified.length() - 3) == ".as")
+			if (man.isLoaded(modified))
 			{
-				auto& man = mEngine.get<ScriptManager>();
 				man.loadFromFile(modified);
 			}
 		}
@@ -286,12 +305,14 @@ void Application::run()
 			}
 			else
 			{
+				mState.event(ev);
+				/*
 				if (ev.type == sf::Event::KeyPressed ||
 					ev.type == sf::Event::KeyReleased)
 				{
 					bool pressed = ev.type == sf::Event::KeyPressed;
-					
-					man.runHook<sf::Keyboard::Key, bool>("Keyboard.Key", ev.key.code, pressed);
+
+					man.runHook<int, bool>("Keyboard.Key", ev.key.code, pressed);
 				}
 				else if(ev.type == sf::Event::JoystickButtonPressed ||
 					ev.type == sf::Event::JoystickButtonReleased)
@@ -302,7 +323,7 @@ void Application::run()
 				}
 				else if (ev.type == sf::Event::JoystickMoved)
 				{
-					man.runHook<uint32_t, sf::Joystick::Axis, float>("Joystick.Moved", ev.joystickMove.joystickId, ev.joystickMove.axis, ev.joystickMove.position);
+					man.runHook<uint32_t, uint32_t, float>("Joystick.Moved", ev.joystickMove.joystickId, ev.joystickMove.axis, ev.joystickMove.position);
 				}
 				else if (ev.type == sf::Event::MouseButtonPressed ||
 					ev.type == sf::Event::MouseButtonReleased)
@@ -310,14 +331,18 @@ void Application::run()
 					bool pressed = ev.type == sf::Event::MouseButtonPressed;
 
 					sf::Vector2f pos{ float(ev.mouseButton.x), float(ev.mouseButton.y) };
-					man.runHook<const sf::Vector2f&, sf::Mouse::Button, bool>("Mouse.Button", pos, ev.mouseButton.button, pressed);
+					man.runHook<const sf::Vector2f*, uint32_t, bool>("Mouse.Button", &pos, ev.mouseButton.button, pressed);
 				}
 				else if (ev.type == sf::Event::MouseMoved)
 				{
 					sf::Vector2f pos(sf::Mouse::getPosition(window));
-					man.runHook<const sf::Vector2f&>("Mouse.Moved", pos);
+					man.runHook<const sf::Vector2f*>("Mouse.Moved", &pos);
 				}
-			}
+				else if (ev.type == sf::Event::TextEntered)
+				{
+					man.runHook<uint32_t>("Text.Entered", ev.text.unicode);
+				}
+			*/}
 		}
 
 
@@ -327,13 +352,15 @@ void Application::run()
 		while (tickTime >= tickLength)
 		{
 			// Run fixed updates
-			man.runHook<const Timespan&>("Tick", tickLength);
+			mState.tick(tickLength);
+			man.runHook<const Timespan*>("Tick", &tickLength);
 
 			tickTime -= tickLength;
 		}
 
 		// Run per-frame updates
-		man.runHook<const Timespan&>("Update", dt);
+		mState.update(dt);
+		man.runHook<const Timespan*>("Update", &dt);
 
 
 		// ----------------
@@ -342,13 +369,17 @@ void Application::run()
 		window.clear();
 
 		// Draw things
-		window.setView(gameView);
+		//window.setView(gameView);
+		mState.draw(window);
 		man.runHook<sf::RenderTarget*>("Draw", &window);
 		gameView = window.getView();
 
 		// Draw UI things
 		window.setView(uiView);
+		mState.drawUI(window);
 		man.runHook<sf::RenderTarget*>("DrawUI", &window);
+
+		window.setView(gameView);
 
 		window.display();
 
@@ -364,4 +395,20 @@ void Application::run()
 sf::RenderTarget& Application::getRT()
 {
 	return mEngine.get<sf::RenderWindow>();
+}
+
+template<>
+int ScriptManager::setCTXArg<const std::string*>(asIScriptContext* ctx, uint32_t id, const std::string* arg)
+{
+	return ctx->SetArgObject(id, (std::string*)arg);
+}
+template<>
+int ScriptManager::setCTXArg<const Timespan*>(asIScriptContext* ctx, uint32_t id, const Timespan* arg)
+{
+	return ctx->SetArgObject(id, (Timespan*)arg);
+}
+template<>
+int ScriptManager::setCTXArg<sf::RenderTarget*>(asIScriptContext* ctx, uint32_t id, sf::RenderTarget* arg)
+{
+	return ctx->SetArgObject(id, arg);
 }

@@ -10,6 +10,7 @@ namespace sf
 	class Font;
 	class Music;
 	class SoundBuffer;
+	class Shader;
 	class Texture;
 }
 
@@ -30,6 +31,8 @@ public:
 
 		T* get();
 		explicit operator T*();
+
+		operator bool();
 
 		T& operator*();
 		const T& operator*() const;
@@ -64,6 +67,7 @@ public:
 	typedef res_ptr<sf::Music> Music;
 	typedef res_ptr<sf::SoundBuffer> Sound;
 	typedef res_ptr<sf::Texture> Texture;
+	typedef res_ptr<sf::Shader> Shader;
 
 private:
 	struct Resource

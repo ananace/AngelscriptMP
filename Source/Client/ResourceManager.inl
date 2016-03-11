@@ -40,13 +40,14 @@ ResourceManager::res_ptr<T>& ResourceManager::res_ptr<T>::operator=(const res_pt
 	if (&ptr == this)
 		return *this;
 
-	if (mData)
+	if (mManager && mData)
 		mManager->release(mData);
 	
 	mManager = ptr.mManager;
 	mData = ptr.mData;
 
-	mManager->addref(mData);
+	if (mManager && mData)
+		mManager->addref(mData);
 
 	return *this;
 }
@@ -64,6 +65,11 @@ template<typename T>
 inline ResourceManager::res_ptr<T>::operator T*()
 {
 	return mData;
+}
+template<typename T>
+inline ResourceManager::res_ptr<T>::operator bool()
+{
+	return mManager && mData;
 }
 
 template<typename T>
@@ -103,7 +109,9 @@ ResourceManager::res_ptr<T> ResourceManager::get(const std::string& name)
 
 		auto& res = mResources[name];
 		res.Counter = 0;
-		res.Destructor = [](void* mem) { delete (T*)mem; };
+		res.Destructor = [](void* mem) {
+			delete (T*)mem;
+		};
 		res.Memory = resource;
 	}
 

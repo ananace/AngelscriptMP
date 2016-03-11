@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StateMachine.hpp"
+
 #include <Core/Engine.hpp>
 #include <Core/ScriptManager.hpp>
 
@@ -22,4 +24,5 @@ public:
 
 private:
 	Engine mEngine;
+	StateMachine mState;
 };

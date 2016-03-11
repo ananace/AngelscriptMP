@@ -5,6 +5,7 @@
 #include <SFML/Audio/SoundBuffer.hpp>
 #include <SFML/Graphics/Font.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics/Shader.hpp>
 
 namespace
 {
@@ -88,7 +89,7 @@ void ResourceManager::registerScript(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("Music", "sf::Music@ get_Music()", asMETHODPR(res_ptr<sf::Music>, operator*, (), sf::Music&), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("Music", "const sf::Music@ get_Music() const", asMETHODPR(res_ptr<sf::Music>, operator*, () const, const sf::Music&), asCALL_THISCALL));
 
-		AS_ASSERT(eng->RegisterObjectType("Font", sizeof(Font), asOBJ_VALUE | asGetTypeTraits<Music>()));
+		AS_ASSERT(eng->RegisterObjectType("Font", sizeof(Font), asOBJ_VALUE | asGetTypeTraits<Font>()));
 		AS_ASSERT(eng->RegisterObjectBehaviour("Font", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createRes<sf::Font>), asCALL_CDECL_OBJFIRST));
 		AS_ASSERT(eng->RegisterObjectBehaviour("Font", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyRes<sf::Font>), asCALL_CDECL_OBJFIRST));
 
@@ -97,19 +98,30 @@ void ResourceManager::registerScript(ScriptManager& man)
 		AS_ASSERT(eng->RegisterObjectMethod("Font", "sf::Font@ get_Font()", asMETHODPR(res_ptr<sf::Font>, operator*, (), sf::Font&), asCALL_THISCALL));
 		AS_ASSERT(eng->RegisterObjectMethod("Font", "const sf::Font@ get_Font() const", asMETHODPR(res_ptr<sf::Font>, operator*, () const, const sf::Font&), asCALL_THISCALL));
 
+		AS_ASSERT(eng->RegisterObjectType("Shader", sizeof(Shader), asOBJ_VALUE | asGetTypeTraits<Shader>()));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Shader", asBEHAVE_CONSTRUCT, "void f()", asFUNCTION(createRes<sf::Shader>), asCALL_CDECL_OBJFIRST));
+		AS_ASSERT(eng->RegisterObjectBehaviour("Shader", asBEHAVE_DESTRUCT, "void f()", asFUNCTION(destroyRes<sf::Shader>), asCALL_CDECL_OBJFIRST));
 
-		AS_ASSERT(eng->RegisterGlobalFunction("Texture GetTexture(const string&in)", asMETHOD(ResourceManager, get<sf::Texture>), asCALL_THISCALL_ASGLOBAL, this));
-		AS_ASSERT(eng->RegisterGlobalFunction("SoundBuffer GetSoundBuffer(const string&in)", asMETHOD(ResourceManager, get<sf::SoundBuffer>), asCALL_THISCALL_ASGLOBAL, this));
-		AS_ASSERT(eng->RegisterGlobalFunction("Music GetMusic(const string&in)", asMETHOD(ResourceManager, get<sf::Music>), asCALL_THISCALL_ASGLOBAL, this));
-		AS_ASSERT(eng->RegisterGlobalFunction("Font GetFont(const string&in)", asMETHOD(ResourceManager, get<sf::Font>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterObjectMethod("Shader", "Shader& opAssign(const Shader&in)", asMETHOD(res_ptr<sf::Shader>, operator=), asCALL_THISCALL));
+
+		AS_ASSERT(eng->RegisterObjectMethod("Shader", "sf::Shader@ get_Shader()", asMETHODPR(res_ptr<sf::Shader>, operator*, (), sf::Shader&), asCALL_THISCALL));
+		AS_ASSERT(eng->RegisterObjectMethod("Shader", "const sf::Shader@ get_Shader() const", asMETHODPR(res_ptr<sf::Shader>, operator*, () const, const sf::Shader&), asCALL_THISCALL));
+
+
+		AS_ASSERT(eng->RegisterGlobalFunction("Texture GetTexture(const string&in)", asMETHODPR(ResourceManager, get<sf::Texture>, (const std::string&), ResourceManager::res_ptr<sf::Texture>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("SoundBuffer GetSoundBuffer(const string&in)", asMETHODPR(ResourceManager, get<sf::SoundBuffer>, (const std::string&), ResourceManager::res_ptr<sf::SoundBuffer>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Music GetMusic(const string&in)", asMETHODPR(ResourceManager, get<sf::Music>, (const std::string&), ResourceManager::res_ptr<sf::Music>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Font GetFont(const string&in)", asMETHODPR(ResourceManager, get<sf::Font>, (const std::string&), ResourceManager::res_ptr<sf::Font>), asCALL_THISCALL_ASGLOBAL, this));
+		AS_ASSERT(eng->RegisterGlobalFunction("Shader GetShader(const string&in)", asMETHODPR(ResourceManager, get<sf::Shader>, (const std::string&), ResourceManager::res_ptr<sf::Shader>), asCALL_THISCALL_ASGLOBAL, this));
 
 		AS_ASSERT(eng->SetDefaultNamespace(""));
 	});
 
-	man.registerSerializedType<res_ptr<sf::Texture>>("Font");
+	man.registerSerializedType<res_ptr<sf::Font>>("Font");
 	man.registerSerializedType<res_ptr<sf::Texture>>("Texture");
-	man.registerSerializedType<res_ptr<sf::Texture>>("SoundBuffer");
-	man.registerSerializedType<res_ptr<sf::Texture>>("Music");
+	man.registerSerializedType<res_ptr<sf::SoundBuffer>>("SoundBuffer");
+	man.registerSerializedType<res_ptr<sf::Music>>("Music");
+	man.registerSerializedType<res_ptr<sf::Shader>>("Shader");
 }
 
 template<>
@@ -131,4 +143,22 @@ template<>
 bool ResourceManager::loadResource<sf::Music>(sf::Music* res, const std::string& file)
 {
 	return res->openFromFile(file);
+}
+template<>
+bool ResourceManager::loadResource<sf::Shader>(sf::Shader* res, const std::string& file)
+{
+	/*
+	if (file.find_last_of(".glsl") != std::string::npos)
+		return res->loadFromFile(file + ".vert", file + ".frag");
+	else if (file.find_last_of(".vert") != std::string::npos)
+		return res->loadFromFile(file, sf::Shader::Vertex);
+	else if (file.find_last_of(".geom") != std::string::npos)
+		return res->loadFromFile(file, sf::Shader::Geometry);
+	else if (file.find_last_of(".frag") != std::string::npos)
+		return res->loadFromFile(file, sf::Shader::Fragment);
+	else
+		return res->loadFromFile(file + ".vert", file + ".geom", file + ".frag");
+		*/
+
+	return false;
 }
