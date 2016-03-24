@@ -249,7 +249,9 @@ void Application::run()
 
 	mState.primeRT(&window);
 
-	window.create({ 800, 600 }, "Geometry Shaders are Go!");
+	window.create({ 800, 600 }, "Geometry Shaders are Go!", 7U, sf::ContextSettings(24, 8, 1, 4, 0));
+	auto ctx = window.getSettings();
+
 	sf::View uiView = window.getDefaultView(), gameView({}, { 0, 2500 });
 	{
 		sf::Vector2f size = (sf::Vector2f)window.getSize();

@@ -4,79 +4,49 @@
 
 #include <SFML/Graphics/RenderTarget.hpp>
 #include <SFML/Graphics/Shader.hpp>
-
-#include <SFML/Graphics/VertexArray.hpp>
+#include <SFML/Window/Event.hpp>
 
 #include <random>
 
-sf::Shader shader;
-sf::VertexArray test(sf::Points, 100);
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 
-IntroState::IntroState() : 
+#include <gl/GL.h>
+
+#pragma comment(lib, "opengl32.lib")
+
+struct Point3D {
+	sf::Glsl::Vec3 position;
+	sf::Glsl::Vec3 colour;
+};
+
+sf::Shader shader;
+
+std::vector<Point3D> vertices;
+
+IntroState::IntroState() :
 	mTime(0)
 {
-	shader.loadFromMemory(
-		// Vertex
-		"uniform float angle;\n"
-		"out float angles;\n"
-		"void main() {\n"
-		"  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\n"
-		"  angles = angle;\n"
-		"}",
-
-		// Geometry
-		"#version 150\n"
-		"in float angles[];\n"
-		"uniform vec2 size;\n"
-		"layout (points) in;\n"
-		"layout (triangle_strip, max_vertices = 32) out;\n"
-		"out vec2 tex_coord;\n"
-		"out vec4 color;\n"
-		"void main() {\n"
-		"  vec2 half_size = size / 2.f;\n"
-		"  for (int i = 0; i < gl_in.length(); i++) {\n"
-		"    vec2 ang_x = vec2(cos(angles[i]), sin(angles[i]));\n"
-		"    vec2 ang_y = vec2(cos(angles[i] + 1.5707f), sin(angles[i] + 1.5707f));\n"
-		"    vec2 pos = gl_in[i].gl_Position.xy;\n"
-		"    gl_Position = vec4(pos - (ang_x * half_size + ang_y * half_size), 0.f, 1.f);\n"
-		"    color = vec4(1.f, 0.f, 0.f, 1.f);\n"
-		"    tex_coord = vec2(1.f, 1.f);\n"
-		"    EmitVertex();\n"
-		"    gl_Position = vec4(pos - (ang_y * half_size - ang_x * half_size), 0.f, 1.f);\n"
-		"    color = vec4(0.f, 1.f, 0.f, 1.f);\n"
-		"    tex_coord = vec2(0.f, 1.f);\n"
-		"    EmitVertex();\n"
-		"    gl_Position = vec4(pos - (ang_x * half_size - ang_y * half_size), 0.f, 1.f);\n"
-		"    color = vec4(0.f, 0.f, 1.f, 1.f);\n"
-		"    tex_coord = vec2(1.f, 0.f);\n"
-		"    EmitVertex();\n"
-		"    gl_Position = vec4(pos + (ang_x * half_size + ang_y * half_size), 0.f, 1.f);\n"
-		"    color = vec4(1.f, 1.f, 1.f, 1.f);\n"
-		"    tex_coord = vec2(0.f, 0.f);\n"
-		"    EmitVertex();\n"
-		"    EndPrimitive();\n"
-		"  }\n"
-		"}",
-
-		// Fragment
-		"#version 150\n"
-		"//uniform sampler2D texture;\n"
-		"in vec2 tex_coord;\n"
-		"in vec4 color;\n"
-		"void main() {\n"
-		"  gl_FragColor = color;\n"
-		"}"
-		);
+	shader.loadFromFile("voxel.vert", "voxel.geom", "voxel.frag");
 
 	std::random_device rand;
 
 	std::uniform_real_distribution<float> dist(-1.f, 1.f);
+	std::uniform_real_distribution<float> col_dist(0.f, 1.f);
 
-	for (int i = 0; i < test.getVertexCount(); ++i)
+	vertices.resize(20);
+	for (int i = 0; i < vertices.size(); ++i)
 	{
-		test[i].position = {
-			800 * dist(rand),
-			600 * dist(rand)
+		vertices[i].position = {
+			1 * dist(rand),
+			1 * dist(rand),
+			1 +  dist(rand)
+		};
+
+		vertices[i].colour = {
+			col_dist(rand),
+			col_dist(rand),
+			col_dist(rand)
 		};
 	}
 }
@@ -85,9 +55,9 @@ IntroState::~IntroState()
 
 }
 
-void IntroState::event(const sf::Event&)
+void IntroState::event(const sf::Event& ev)
 {
-
+	
 }
 void IntroState::tick(const Timespan&)
 {
@@ -97,15 +67,85 @@ void IntroState::update(const Timespan& dt)
 {
 	mTime += dt;
 
+	const float dtTime = std::chrono::duration_cast<std::chrono::duration<float>>(dt).count();
 	const float time = std::chrono::duration_cast<std::chrono::duration<float>>(mTime).count();
 	const float size = 0.25f + std::abs(std::sin(time)) * 0.25f;
 
-	shader.setUniform("size", sf::Vector2f(size, size));
-	shader.setUniform("angle", time * Math::PI2);
+	shader.setUniform("size", sf::Vector3f(0.25, 0.25, 0.25));
+
+	float mult = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 1.f : -1.f;
+
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
+	{
+		for (auto& p : vertices)
+			p.position.z += dtTime * mult;
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
+	{
+		for (auto& p : vertices)
+			p.position.x += dtTime * mult;
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Y))
+	{
+		for (auto& p : vertices)
+			p.position.y += dtTime * mult;
+	}
 }
 void IntroState::draw(sf::RenderTarget& rt)
 {
-	rt.draw(test, &shader);
+	//rt.pushGLStates();
+	/*
+	glDepthMask(GL_TRUE);
+	glDepthFunc(GL_LEQUAL);
+	glDepthRange(1.f, -1.0f);
+	*/
+	glDepthRange(1.f, 0.0f);
+
+	//glMatrixMode(GL_PROJECTION);
+	//glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	GLfloat pos[] = { 1, 1, 0, 0 };
+	GLfloat amb[] = { 0, 0, 0, 1 };
+	GLfloat spe[] = { 1, 1, 1, 1 };
+	GLfloat dif[] = { 0.2, 0.2, 0.2, 1 };
+
+	glLightfv(GL_LIGHT0, GL_POSITION, pos);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, dif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, dif);
+
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+
+	const char* data = reinterpret_cast<const char*>(vertices.data());
+
+	glVertexPointer(3, GL_FLOAT, sizeof(Point3D), data + 0);
+	glColorPointer(3, GL_FLOAT, sizeof(Point3D), data + sizeof(sf::Glsl::Vec3));
+
+	sf::Shader::bind(&shader);
+
+	glDrawArrays(GL_POINTS, 0, vertices.size());
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glDisable(GL_LIGHT0);
+	glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+
+	glDepthRange(0, 1);
+
+	//rt.popGLStates();
 }
 void IntroState::drawUI(sf::RenderTarget& rt)
 {
