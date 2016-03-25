@@ -93,7 +93,7 @@ std::size_t CPUFeatures::init()
 
 void CPUFeatures::print()
 {
-#if defined YARN_LINUX
+#if defined SFML_SYSTEM_LINUX
 #define CHECKFLAG(flag) << "  "#flag": " << (has##flag() ? "\x1b[32mYes\x1b[0m" : "\x1b[31mNo\x1b[0m") << std::endl
 #else
 #define CHECKFLAG(flag) << "  "#flag": " << (has##flag() ? "Yes" : "No") << std::endl

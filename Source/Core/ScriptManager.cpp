@@ -28,7 +28,15 @@ namespace
 		if (msg->section && msg->section[0] != 0)
 			std::cerr << " (" << msg->section << ":" << msg->row << ":" << msg->col << ")";
 		std::cerr << ";" << std::endl
-			<< ">  " << msg->message << std::endl;
+			<< ">  ";
+#ifdef SFML_SYSTEM_LINUX
+		std::cerr << "\x1b[31m";
+#endif
+		std::cerr << msg->message << std::endl;
+
+#ifdef SFML_SYSTEM_LINUX
+		std::cerr << "\x1b[0m";
+#endif
 	}
 
 	class BytecodeStore : public asIBinaryStream
