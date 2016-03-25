@@ -12,6 +12,17 @@ const Transform3D Transform3D::Identity {
 	0, 0, 0, 1
 };
 
+Transform3D::Transform3D() :
+	mMatrix{
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	}
+{
+
+}
+
 Transform3D::Transform3D(const float matrix[16])
 {
 	std::copy(matrix, matrix + 16, mMatrix);

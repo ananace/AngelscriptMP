@@ -15,6 +15,7 @@ public:
 		Axis_Z
 	};
 
+	Transform3D();
 	Transform3D(const float matrix[16]);
 	Transform3D(
 		float a00, float a01, float a02, float a03,
