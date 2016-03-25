@@ -1,4 +1,5 @@
 SET(HEADERS
+	CPUID.hpp
 	Engine.hpp
 	Engine.inl
 	FileWatcher.hpp
@@ -23,6 +24,7 @@ SET(HEADERS
 )
 
 SET(SOURCES
+	CPUID.cpp
 	Engine.cpp
 	FileWatcher.cpp
 	Math.cpp

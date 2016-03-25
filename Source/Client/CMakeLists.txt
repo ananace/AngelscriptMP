@@ -5,6 +5,8 @@ SET(HEADERS
 	StateMachine.hpp
 	StateMachine.inl
 
+	Graphics/Transform3D.hpp
+	Graphics/Transformable3D.hpp
 	Graphics/Voxel.hpp
 
 	Graphics/Renderer/GeomShader.hpp
@@ -19,6 +21,9 @@ SET(SOURCES
 	Application.cpp
 	ResourceManager.cpp
 	StateMachine.cpp
+
+	Graphics/Transform3D.cpp
+	Graphics/Transformable3D.cpp
 
 	Graphics/Renderer/GeomShader.cpp
 	Graphics/Renderer/VBO.cpp

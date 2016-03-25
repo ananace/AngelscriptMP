@@ -20,7 +20,7 @@ class IRenderer
 public:
 	IRenderer(sf::RenderWindow& target) : mRT(target) { }
 
-	virtual ~IRenderer() { }
+	virtual ~IRenderer() = default;
 
 	virtual bool isAvailable() const = 0;
 
