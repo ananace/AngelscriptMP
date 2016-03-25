@@ -11,6 +11,9 @@ BitReader::BitReader()
 
 }
 
+namespace Network
+{
+
 template<>
 inline bool BitReader::readUInt(uint32_t& data, uint8_t bits)
 {
@@ -144,6 +147,8 @@ inline bool BitReader::readInt(int32_t& data, uint8_t bits)
 
 	data = neg ? -1 - temp : temp;
 	return true;
+}
+
 }
 
 bool BitReader::readFloat(float& data, float min, float max, uint8_t bits)

@@ -8,16 +8,20 @@
 
 #include <random>
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <SFML/OpenGL.hpp>
 
-#include <gl/GL.h>
-
+#ifdef _WIN32
 #pragma comment(lib, "opengl32.lib")
+#endif
 
 struct Point3D {
+#if SFML_VERSION_PATCH > 2
 	sf::Glsl::Vec3 position;
 	sf::Glsl::Vec3 colour;
+#else
+	sf::Vector3f position;
+	sf::Vector3f colour;
+#endif
 };
 
 sf::Shader shader;
@@ -27,8 +31,11 @@ std::vector<Point3D> vertices;
 IntroState::IntroState() :
 	mTime(0)
 {
+#if SFML_VERSION_PATCH > 2
 	shader.loadFromFile("voxel.vert", "voxel.geom", "voxel.frag");
+#else
 
+#endif
 	std::random_device rand;
 
 	std::uniform_real_distribution<float> dist(-1.f, 1.f);
@@ -71,7 +78,9 @@ void IntroState::update(const Timespan& dt)
 	const float time = std::chrono::duration_cast<std::chrono::duration<float>>(mTime).count();
 	const float size = 0.25f + std::abs(std::sin(time)) * 0.25f;
 
+#if SFML_VERSION_PATCH > 2
 	shader.setUniform("size", sf::Vector3f(0.25, 0.25, 0.25));
+#endif
 
 	float mult = sf::Keyboard::isKeyPressed(sf::Keyboard::LShift) ? 1.f : -1.f;
 
@@ -99,7 +108,7 @@ void IntroState::draw(sf::RenderTarget& rt)
 	glDepthFunc(GL_LEQUAL);
 	glDepthRange(1.f, -1.0f);
 	*/
-	glDepthRange(1.f, 0.0f);
+	glDepthRange(1.f, 0.f);
 
 	//glMatrixMode(GL_PROJECTION);
 	//glLoadIdentity();
@@ -129,7 +138,7 @@ void IntroState::draw(sf::RenderTarget& rt)
 	const char* data = reinterpret_cast<const char*>(vertices.data());
 
 	glVertexPointer(3, GL_FLOAT, sizeof(Point3D), data + 0);
-	glColorPointer(3, GL_FLOAT, sizeof(Point3D), data + sizeof(sf::Glsl::Vec3));
+	glColorPointer(3, GL_FLOAT, sizeof(Point3D), data + sizeof(Point3D::position));
 
 	sf::Shader::bind(&shader);
 
@@ -143,7 +152,7 @@ void IntroState::draw(sf::RenderTarget& rt)
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DEPTH_TEST);
 
-	glDepthRange(0, 1);
+	glDepthRange(0.f, 1.f);
 
 	//rt.popGLStates();
 }

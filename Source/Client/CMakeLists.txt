@@ -5,6 +5,12 @@ SET(HEADERS
 	StateMachine.hpp
 	StateMachine.inl
 
+	Graphics/Voxel.hpp
+
+	Graphics/Renderer/GeomShader.hpp
+	Graphics/Renderer/IRenderer.hpp
+	Graphics/Renderer/VBO.hpp
+
 	States/IState.hpp
 	States/IntroState.hpp
 )
@@ -14,11 +20,18 @@ SET(SOURCES
 	ResourceManager.cpp
 	StateMachine.cpp
 
+	Graphics/Renderer/GeomShader.cpp
+	Graphics/Renderer/VBO.cpp
+
 	States/IntroState.cpp
 
 	main.cpp
 )
 
+SOURCE_GROUP("Header files\\Graphics\\" REGULAR_EXPRESSION "Graphics/[^./]+.(hpp|inl)")
+SOURCE_GROUP("Source files\\Graphics\\" REGULAR_EXPRESSION "Graphics/[^./]+.cpp")
+SOURCE_GROUP("Header files\\Graphics\\Renderer\\" REGULAR_EXPRESSION "Graphics/Renderer/[^./]+.(hpp|inl)")
+SOURCE_GROUP("Source files\\Graphics\\Renderer\\" REGULAR_EXPRESSION "Graphics/Renderer/[^./]+.cpp")
 SOURCE_GROUP("Header files\\States\\" REGULAR_EXPRESSION "States/[^./]+.(hpp|inl)")
 SOURCE_GROUP("Source files\\States\\" REGULAR_EXPRESSION "States/[^./]+.cpp")
 
@@ -34,5 +47,6 @@ TARGET_LINK_LIBRARIES(Client
 IF (NOT WIN32)
 	TARGET_LINK_LIBRARIES(Client
 		pthread
+		GL
 	)
 ENDIF()

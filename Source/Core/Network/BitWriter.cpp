@@ -1,6 +1,7 @@
 #include "BitWriter.hpp"
 
 #include <cassert>
+#include <cmath>
 
 using Network::BitWriter;
 
@@ -11,6 +12,9 @@ BitWriter::BitWriter()
 {
 
 }
+
+namespace Network
+{
 
 template<>
 inline bool BitWriter::writeUInt(uint32_t data, uint8_t bits)
@@ -75,6 +79,8 @@ template<>
 bool BitWriter::writeInt(uint8_t data, uint8_t bits)
 {
 	return writeInt(uint32_t(data), bits);
+}
+
 }
 
 bool BitWriter::writeFloat(float data, float min, float max, uint8_t bits)
