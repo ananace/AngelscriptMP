@@ -27,7 +27,7 @@ void as::priv::RegShader(asIScriptEngine* eng)
 	AS_ASSERT(eng->SetDefaultNamespace("sf"));
 
 
-#if SFML_VERSION_PATCH > 2
+#if SFML_VERSION_MAJOR > 2 || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR > 3) || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR == 3 && SFML_VERSION_PATCH > 2) || defined SFML_DEPRECATED
 	AS_ASSERT(eng->RegisterGlobalFunction("bool get_GeometryAvailable()", asFUNCTION(sf::Shader::isGeometryAvailable), asCALL_CDECL));
 	AS_ASSERT(eng->RegisterEnumValue("Type", "Geometry", sf::Shader::Geometry));
 

@@ -71,7 +71,7 @@ void as::priv::RegText(asIScriptEngine* eng)
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void SetFont(const Font@)", asMETHOD(sf::Text, setFont), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "uint get_CharacterSize() const", asMETHOD(sf::Text, getCharacterSize), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_CharacterSize(uint)", asMETHOD(sf::Text, setCharacterSize), asCALL_THISCALL));
-#if SFML_VERSION_PATCH > 2
+#if SFML_VERSION_MAJOR > 2 || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR > 3) || (SFML_VERSION_MAJOR == 2 && SFML_VERSION_MINOR == 3 && SFML_VERSION_PATCH > 2) || defined SFML_DEPRECATED
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Color& get_FillColor() const", asMETHOD(sf::Text, getFillColor), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "void set_FillColor(const Color&in)", asMETHOD(sf::Text, setFillColor), asCALL_THISCALL));
 	AS_ASSERT(eng->RegisterObjectMethod("Text", "const Color& get_OutlineColor() const", asMETHOD(sf::Text, getOutlineColor), asCALL_THISCALL));
