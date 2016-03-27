@@ -12,7 +12,7 @@ VBO::VBO(sf::RenderWindow& target) : IRenderer(target)
 
 bool VBO::isAvailable() const
 {
-	auto& rt = getRenderTarget();
+	auto& rt = getRenderWindow();
 	auto& settings = rt.getSettings();
 
 	return settings.majorVersion > 2 ||
@@ -21,15 +21,15 @@ bool VBO::isAvailable() const
 
 void VBO::beginRender()
 {
-
+	// TODO: Set GL States
 }
 void VBO::endRender()
 {
-
+	// TODO: Reset GL States
 }
 
 void VBO::render(const Voxel* voxels, uint32_t count)
 {
-
+	// TODO: Bind and render VBOs
 }
 

@@ -30,8 +30,8 @@ public:
 	virtual void render(const Voxel* voxels, uint32_t count) = 0;
 
 protected:
-	sf::RenderWindow& getRenderTarget() { return mRT; }
-	const sf::RenderWindow& getRenderTarget() const { return mRT; }
+	sf::RenderWindow& getRenderWindow() { return mRT; }
+	const sf::RenderWindow& getRenderWindow() const { return mRT; }
 
 private:
 	sf::RenderWindow& mRT;
