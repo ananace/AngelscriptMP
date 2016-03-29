@@ -10,6 +10,7 @@ namespace sf
 namespace Graphics
 {
 
+class Drawable3D;
 class Voxel;
 
 namespace Renderer
@@ -28,8 +29,8 @@ public:
 	virtual void endRender() = 0;
 
 	virtual void render(const Voxel* voxels, uint32_t count) = 0;
+	virtual void render(const Drawable3D&);
 
-protected:
 	sf::RenderWindow& getRenderWindow() { return mRT; }
 	const sf::RenderWindow& getRenderWindow() const { return mRT; }
 

@@ -5,6 +5,7 @@ SET(HEADERS
 	StateMachine.hpp
 	StateMachine.inl
 
+	Graphics/Drawable3D.hpp
 	Graphics/Transform3D.hpp
 	Graphics/Transformable3D.hpp
 	Graphics/Voxel.hpp

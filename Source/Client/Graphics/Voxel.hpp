@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Drawable3D.hpp"
 #include "Transformable3D.hpp"
 
 #include <SFML/Graphics/Color.hpp>
@@ -15,13 +16,15 @@ namespace std
 namespace Graphics
 {
 
-class Voxel : public Transformable3D//, public Drawable3D
+class Voxel : public Transformable3D, public Drawable3D
 {
 public:
 	Voxel();
 
 	bool loadFromFile(const std::string& file);
 	bool loadFromStream(sf::InputStream& stream);
+
+	void draw(Renderer::IRenderer& renderer) const;
 
 private:
 #pragma pack(push, 1)
