@@ -4,6 +4,7 @@
 
 #include <list>
 
+namespace Graphics { namespace Renderer { class IRenderer; } }
 namespace sf { class Event; class RenderTarget; }
 
 class IState;
@@ -17,21 +18,21 @@ public:
 	void event(const sf::Event&);
 	void tick(const Timespan&);
 	void update(const Timespan&);
-	void draw(sf::RenderTarget&);
-	void drawUI(sf::RenderTarget&);
+	void draw(Graphics::Renderer::IRenderer&);
+	void drawUI(Graphics::Renderer::IRenderer&);
 
 	template<typename T>
 	void changeState(bool remove = false);
 	void changeState(IState* to, bool remove = false);
 
-	void primeRT(sf::RenderTarget* rt);
+	void primeRenderer(Graphics::Renderer::IRenderer* rt);
 
 private:
 	
 	Engine& mEngine;
 
 	IState* mCurState;
-	sf::RenderTarget* mLastSeenRT;
+	Graphics::Renderer::IRenderer* mRenderer;
 
 	std::list<IState*> mOldStates;
 

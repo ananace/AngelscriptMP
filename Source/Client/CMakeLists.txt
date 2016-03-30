@@ -44,6 +44,10 @@ SOURCE_GROUP("Source files\\States\\" REGULAR_EXPRESSION "States/[^./]+.cpp")
 SOURCE_GROUP("Header files\\" REGULAR_EXPRESSION "[^./]+.(hpp|inl)")
 SOURCE_GROUP("Source files\\" REGULAR_EXPRESSION "[^./]+.cpp")
 
+INCLUDE_DIRECTORIES(
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 ADD_EXECUTABLE(Client ${HEADERS} ${SOURCES})
 
 TARGET_LINK_LIBRARIES(Client

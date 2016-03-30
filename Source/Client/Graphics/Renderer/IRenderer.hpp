@@ -1,11 +1,8 @@
 #pragma once
 
-#include <cstdint>
+#include <SFML/Graphics/RenderWindow.hpp>
 
-namespace sf
-{
-	class RenderWindow;
-}
+#include <cstdint>
 
 namespace Graphics
 {
@@ -31,6 +28,10 @@ public:
 	virtual void render(const Voxel* voxels, uint32_t count) = 0;
 	virtual void render(const Drawable3D&);
 
+	sf::RenderTarget& getRT() { return mRT; }
+	const sf::RenderTarget& getRT() const { return mRT; }
+
+protected:
 	sf::RenderWindow& getRenderWindow() { return mRT; }
 	const sf::RenderWindow& getRenderWindow() const { return mRT; }
 

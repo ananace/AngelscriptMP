@@ -5,7 +5,7 @@
 #include <typeinfo>
 
 StateMachine::StateMachine(Engine& eng) :
-	mEngine(eng), mCurState(nullptr), mLastSeenRT(nullptr)
+	mEngine(eng), mCurState(nullptr), mRenderer(nullptr)
 {
 
 }
@@ -21,7 +21,7 @@ StateMachine::~StateMachine()
 
 	if (mCurState)
 	{
-		mCurState->exit(mLastSeenRT);
+		mCurState->exit(mRenderer);
 		delete mCurState;
 	}
 }
@@ -42,24 +42,24 @@ void StateMachine::update(const Timespan& dt)
 	if (mCurState)
 		mCurState->update(dt);
 }
-void StateMachine::draw(sf::RenderTarget& target)
+void StateMachine::draw(Graphics::Renderer::IRenderer& target)
 {
+	if (mRenderer != &target)
+		mRenderer = &target;
 	if (mCurState)
 		mCurState->draw(target);
-
-	mLastSeenRT = &target;
 }
-void StateMachine::drawUI(sf::RenderTarget& target)
+void StateMachine::drawUI(Graphics::Renderer::IRenderer& target)
 {
+	if (mRenderer != &target)
+		mRenderer = &target;
 	if (mCurState)
 		mCurState->drawUI(target);
-
-	mLastSeenRT = &target;
 }
 
-void StateMachine::primeRT(sf::RenderTarget* rt)
+void StateMachine::primeRenderer(Graphics::Renderer::IRenderer* rt)
 {
-	mLastSeenRT = rt;
+	mRenderer = rt;
 }
 
 void StateMachine::changeState(IState* to, bool remove)
@@ -73,7 +73,7 @@ void StateMachine::changeState(IState* to, bool remove)
 
 	if (mCurState)
 	{
-		mCurState->exit(mLastSeenRT);
+		mCurState->exit(mRenderer);
 
 		auto it2 = std::find_if(mOldStates.begin(), mOldStates.end(), [this](IState* st) {
 			return st == mCurState;
@@ -93,7 +93,7 @@ void StateMachine::changeState(IState* to, bool remove)
 	if (to)
 	{
 		to->mStateMachine = this;
-		to->enter(mLastSeenRT);
+		to->enter(mRenderer);
 	}
 
 	if (it == mOldStates.end())

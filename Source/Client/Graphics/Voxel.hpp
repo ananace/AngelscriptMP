@@ -6,12 +6,8 @@
 #include <SFML/Graphics/Color.hpp>
 #include <SFML/System/InputStream.hpp>
 
+#include <string>
 #include <vector>
-
-namespace std
-{
-	class string;
-}
 
 namespace Graphics
 {

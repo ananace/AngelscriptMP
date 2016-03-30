@@ -247,7 +247,7 @@ void Application::run()
 	auto& watch = mEngine.get<FileWatcher>();
 	auto& man = mEngine.get<ScriptManager>();
 
-	mState.primeRT(&window);
+	//mState.primeRenderer();
 
 	window.create({ 800, 600 }, "Geometry Shaders are Go!", 7U, sf::ContextSettings(24, 8, 1, 4, 0));
 	auto ctx = window.getSettings();
@@ -372,13 +372,13 @@ void Application::run()
 
 		// Draw things
 		//window.setView(gameView);
-		mState.draw(window);
+		//mState.draw(window);
 		man.runHook<sf::RenderTarget*>("Draw", &window);
 		gameView = window.getView();
 
 		// Draw UI things
 		window.setView(uiView);
-		mState.drawUI(window);
+		//mState.drawUI(window);
 		man.runHook<sf::RenderTarget*>("DrawUI", &window);
 
 		window.setView(gameView);
