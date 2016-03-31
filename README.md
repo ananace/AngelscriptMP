@@ -1,14 +1,14 @@
-LD34
-=====
+AngelscriptMP
+=============
 
-My Ludum Dare 34 entry
+An Angelscript-based framework for developing scripted multiplayer games.
 
 
 Dependencies
 ============
 
 - CMake
-- SFML 3.2
+- SFML 3.2 (Git recommended for Geometry shader support)
 - Angelscript 2.30
 
 Example Script
