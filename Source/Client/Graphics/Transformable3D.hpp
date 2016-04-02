@@ -15,6 +15,7 @@ public:
 	virtual void move(const sf::Vector3f& vec);
 	virtual void rotate(float p, float y, float r);
 	virtual void scale(float x, float y, float z);
+	virtual void scale(const sf::Vector3f& vec);
 
 	virtual void setPosition(float x, float y, float z);
 	virtual void setPosition(const sf::Vector3f& vec);

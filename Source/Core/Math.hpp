@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/System/Vector2.hpp>
+#include <SFML/System/Vector3.hpp>
 
 class ScriptManager;
 
@@ -53,6 +54,10 @@ namespace sf
 	extern sf::Vector2f operator/(const sf::Vector2f& a, const sf::Vector2f& b);
 	extern sf::Vector2f& operator*=(sf::Vector2f& a, const sf::Vector2f& b);
 	extern sf::Vector2f& operator/=(sf::Vector2f& a, const sf::Vector2f& b);
+	extern sf::Vector3f operator*(const sf::Vector3f& a, const sf::Vector3f& b);
+	extern sf::Vector3f operator/(const sf::Vector3f& a, const sf::Vector3f& b);
+	extern sf::Vector3f& operator*=(sf::Vector3f& a, const sf::Vector3f& b);
+	extern sf::Vector3f& operator/=(sf::Vector3f& a, const sf::Vector3f& b);
 }
 
 #include "Math.inl"

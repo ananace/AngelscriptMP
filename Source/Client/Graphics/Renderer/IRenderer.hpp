@@ -16,9 +16,9 @@ namespace Renderer
 class IRenderer
 {
 public:
-	IRenderer(sf::RenderWindow& target) : mRT(target) { }
+	IRenderer(sf::RenderWindow& target);
 
-	virtual ~IRenderer() = default;
+	virtual ~IRenderer();
 
 	virtual bool isAvailable() const = 0;
 

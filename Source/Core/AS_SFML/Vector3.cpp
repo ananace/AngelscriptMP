@@ -25,31 +25,6 @@ namespace
 
 namespace sf
 {
-	sf::Vector3f operator*(const sf::Vector3f& a, const sf::Vector3f& b)
-	{
-		return{ a.x * b.x, a.y * b.y, a.z * b.z };
-	}
-	sf::Vector3f operator/(const sf::Vector3f& a, const sf::Vector3f& b)
-	{
-		return{ a.x / b.x, a.y / b.y, a.z / b.z };
-	}
-	sf::Vector3f& operator*=(sf::Vector3f& a, const sf::Vector3f& b)
-	{
-		a.x *= b.x;
-		a.y *= b.y;
-		a.z *= b.z;
-
-		return a;
-	}
-	sf::Vector3f& operator/=(sf::Vector3f& a, const sf::Vector3f& b)
-	{
-		a.x /= b.x;
-		a.y /= b.y;
-		a.z /= b.z;
-
-		return a;
-	}
-
 	namespace
 	{
 	void opAdd(asIScriptGeneric* gen)

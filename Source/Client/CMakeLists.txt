@@ -25,8 +25,10 @@ SET(SOURCES
 
 	Graphics/Transform3D.cpp
 	Graphics/Transformable3D.cpp
+	Graphics/Voxel.cpp
 
 	Graphics/Renderer/GeomShader.cpp
+	Graphics/Renderer/IRenderer.cpp
 	Graphics/Renderer/VBO.cpp
 
 	States/IntroState.cpp

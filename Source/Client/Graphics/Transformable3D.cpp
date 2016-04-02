@@ -1,4 +1,5 @@
 #include "Transformable3D.hpp"
+#include <Core/Math.hpp>
 
 using namespace Graphics;
 
@@ -21,6 +22,16 @@ void Transformable3D::move(const sf::Vector3f& vec)
 void Transformable3D::rotate(float p, float y, float r)
 {
 	mRotation += { p, y, r };
+	mTransformDirty = mInverseTransformDirty = true;
+}
+void Transformable3D::scale(float x, float y, float z)
+{
+	mScale *= sf::Vector3f(x, y, z);
+	mTransformDirty = mInverseTransformDirty = true;
+}
+void Transformable3D::scale(const sf::Vector3f& vec)
+{
+	mScale *= vec;
 	mTransformDirty = mInverseTransformDirty = true;
 }
 

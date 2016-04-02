@@ -16,6 +16,11 @@ class Voxel : public Transformable3D, public Drawable3D
 {
 public:
 	Voxel();
+	Voxel(const Voxel&) = default;
+	Voxel(Voxel&&) = default;
+	~Voxel() = default;
+
+	Voxel& operator=(const Voxel&) = default;
 
 	bool loadFromFile(const std::string& file);
 	bool loadFromStream(sf::InputStream& stream);
